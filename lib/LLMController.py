@@ -12,7 +12,7 @@ import subprocess
 import litellm
 import os
 import ollama
-from llama_cpp import Llama
+# from llama_cpp import Llama
 import json
 from openai import OpenAI
 import time
@@ -240,68 +240,68 @@ class Ollama(LLMController):
         return response["response"]
 
 
-class quantized_llama2_7b(LLMController):
-    def __init__(self, api_key: str, extra):
-        # Put the location of to the GGUF model that you've download from HuggingFace here
-        self.model_path = extra
-        self.llm = Llama(model_path=self.model_path)
+# class quantized_llama2_7b(LLMController):
+#     def __init__(self, api_key: str, extra):
+#         # Put the location of to the GGUF model that you've download from HuggingFace here
+#         self.model_path = extra
+#         self.llm = Llama(model_path=self.model_path)
 
-    def askPrompt(self, prompt: str) -> str:
-        question = f"""<s>[INST]
-        {prompt} [/INST]"""
+#     def askPrompt(self, prompt: str) -> str:
+#         question = f"""<s>[INST]
+#         {prompt} [/INST]"""
 
-        # Run the model
-        output = self.llm(
-            question,  # Prompt
-            max_tokens=32,  # Generate up to 32 tokens
-            stop=[
-                "Q:",
-                "\n",
-            ],  # Stop generating just before the model would generate a new question
-            echo=True,  # Echo the prompt back in the output
-        )  # Generate a completion, can also call create_completion
+#         # Run the model
+#         output = self.llm(
+#             question,  # Prompt
+#             max_tokens=32,  # Generate up to 32 tokens
+#             stop=[
+#                 "Q:",
+#                 "\n",
+#             ],  # Stop generating just before the model would generate a new question
+#             echo=True,  # Echo the prompt back in the output
+#         )  # Generate a completion, can also call create_completion
 
-        return str(output["choices"][0]["text"].split("[/INST]", 1)[1])
-
-
-class quantized_mistral_7b(LLMController):
-    def __init__(self, api_key: str, extra):
-        # Put the location of to the GGUF model that you've download from HuggingFace here
-        self.model_path = extra
-        self.llm = Llama(model_path=self.model_path)
-
-    def askPrompt(self, prompt: str) -> str:
-        question = f"Q: {prompt} A: "
-
-        output = self.llm(
-            question,
-            max_tokens=32,
-            stop=["Q:", "\n"],
-            echo=True
-            )
-        print(output)
+#         return str(output["choices"][0]["text"].split("[/INST]", 1)[1])
 
 
-        return str(output["choices"][0]["text"].split("A:", 1)[1])
+# class quantized_mistral_7b(LLMController):
+#     def __init__(self, api_key: str, extra):
+#         # Put the location of to the GGUF model that you've download from HuggingFace here
+#         self.model_path = extra
+#         self.llm = Llama(model_path=self.model_path)
 
-class quantized_llama3_8b(LLMController):
-    def __init__(self, api_key: str, extra):
-        # Put the location of to the GGUF model that you've download from HuggingFace here
-        self.model_path = extra
-        self.llm = Llama(model_path=self.model_path)
+#     def askPrompt(self, prompt: str) -> str:
+#         question = f"Q: {prompt} A: "
 
-    def askPrompt(self, prompt: str) -> str:
-        question = f"Q: {prompt} A: "
-
-        question = f"<|begin_of_text|><|start_header_id|>user<|end_header_id|>{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"
-
-        output = self.llm(
-            question,
-            max_tokens=32,
-            stop=["<|end_header_id|>"],
-            echo=True
-            )
+#         output = self.llm(
+#             question,
+#             max_tokens=32,
+#             stop=["Q:", "\n"],
+#             echo=True
+#             )
+#         print(output)
 
 
-        return str(output["choices"][0]["text"].split("<|end_header_id|>", 1)[1])
+#         return str(output["choices"][0]["text"].split("A:", 1)[1])
+
+# class quantized_llama3_8b(LLMController):
+#     def __init__(self, api_key: str, extra):
+#         # Put the location of to the GGUF model that you've download from HuggingFace here
+#         self.model_path = extra
+#         self.llm = Llama(model_path=self.model_path)
+
+#     def askPrompt(self, prompt: str) -> str:
+#         question = f"Q: {prompt} A: "
+
+#         question = f"<|begin_of_text|><|start_header_id|>user<|end_header_id|>{prompt}<|eot_id|><|start_header_id|>assistant<|end_header_id|>"
+
+#         output = self.llm(
+#             question,
+#             max_tokens=32,
+#             stop=["<|end_header_id|>"],
+#             echo=True
+#             )
+
+
+#         return str(output["choices"][0]["text"].split("<|end_header_id|>", 1)[1])
     
