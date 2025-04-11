@@ -14,7 +14,7 @@ import json
 from PyQt5.QtCore import QObject, pyqtSignal, QWaitCondition, QMutex
 from datetime import datetime
 import os
-
+from tqdm import tqdm
 
 def init_results(campaign_name, llm_model, data_set_type, data_set_path, auto_mode, classifier, classifier_options):
     """Initialise la structure JSON pour stocker les résultats."""
@@ -79,7 +79,7 @@ def record_request(output_file, results, question, response, jailbreak_successfu
     # Sauvegarder immédiatement dans le fichier JSON
     with open(output_file, "w") as json_file:
         json.dump(results, json_file, indent=4)
-    print(f"Results saved to {output_file}")
+    # print(f"Results saved to {output_file}")
 
 
 def save_results(output_file, results):
@@ -236,63 +236,70 @@ class TesterWorker(QObject):
 
     def startWorker(self):
         self.state_update.emit("Running...")
-
+        print (f"Number_prompts to test: {self.prompts_number}")
         try:
-            while not self.stop_flag:
-
-                question = self.dataSet.nextPrompt()
-
-                self.question_update.emit(str(question))
-
-                response = self.llmController.askPrompt(question)
-
-                if self.dataSet.getCurrentIndex() == -1:
-                    break
-                self.response_update.emit(str(response))
-
-                if not self.auto_mode:
-                    self.state_update.emit("Waiting for user decision...")
-                    self.request_decision.emit()
-                    self.mutex.lock()
-                    if self.stop_flag:
+            with tqdm(total=self.prompts_number) as pbar:
+                while not self.stop_flag:
+                    pbar.update(1)
+                    pbar.set_description(f"Index {self.current_index}")
+                    if self.index >= self.prompts_number:
                         break
-                    self.wait_condition.wait(
-                        self.mutex
-                    )  # Attend une décision de l'utilisateur
-                    self.mutex.unlock()
-                    if self.stop_flag:
+                    question = self.dataSet.nextPrompt()
+                    self.question_update.emit(str(question))
+
+                    response = self.llmController.askPrompt(question)
+
+                    if self.dataSet.getCurrentIndex() == -1:
                         break
-                    self.state_update.emit(
-                        "Last user decision received '"
-                        + str(self.user_decision)
-                        + "', running..."
-                    )
-                    # Saving the results
-                    if not self.groud_truth_mode:
-                        record_request(
-                            self.output_file,
-                            self.results,
-                            question,
-                            response,
-                            self.user_decision,
-                            True,
+                    self.response_update.emit(str(response))
+
+                    if not self.auto_mode:
+                        self.state_update.emit("Waiting for user decision...")
+                        self.request_decision.emit()
+                        self.mutex.lock()
+                        if self.stop_flag:
+                            break
+                        self.wait_condition.wait(
+                            self.mutex
+                        )  # Attend une décision de l'utilisateur
+                        self.mutex.unlock()
+                        if self.stop_flag:
+                            break
+                        self.state_update.emit(
+                            "Last user decision received '"
+                            + str(self.user_decision)
+                            + "', running..."
                         )
-                    # Adding GroudTruthValue
+                        # Saving the results
+                        if not self.groud_truth_mode:
+                            record_request(
+                                self.output_file,
+                                self.results,
+                                question,
+                                response,
+                                self.user_decision,
+                                True,
+                            )
+                        # Adding GroudTruthValue
+                        else:
+                            self.dataSet.record_ground_truth(question, self.user_decision)
                     else:
-                        self.dataSet.record_ground_truth(question, self.user_decision)
-                else:
-                    evaluation = self.classifierController.classify_responses(
-                        prompts=[question], responses=[response]
-                    )
-                    self.state_update.emit(
-                        "Last auto evaluation '" + str(evaluation[0]) + "', running..."
-                    )
-                    record_request(
-                        self.output_file, self.results, question, response, evaluation, False
-                    )
+                        # evaluation = self.classifierController.classify_responses(
+                        #     prompts=[question], responses=[response]
+                        # )
+                        evaluation = {}
 
-                self.index += 1
-                self.progress_update.emit(int((self.index / self.prompts_number) * 100))
+                        evaluation[0] = False
+                        evaluation[1] = 0.0
+                        self.state_update.emit(
+                            "Last auto evaluation '" + str(evaluation[0]) + "', running..."
+                        )
+                        record_request(
+                            self.output_file, self.results, question, response, evaluation, False
+                        )
+
+                    self.index += 1
+                    self.progress_update.emit(int((self.index / self.prompts_number) * 100))
 
             # self.save_results()
             self.state_update.emit(f"Results saved to {self.output_file}")
