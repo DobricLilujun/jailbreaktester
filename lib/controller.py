@@ -241,7 +241,7 @@ class TesterWorker(QObject):
             with tqdm(total=self.prompts_number) as pbar:
                 while not self.stop_flag:
                     pbar.update(1)
-                    pbar.set_description(f"Index {self.current_index}")
+                    pbar.set_description(f"Index {self.dataSet.current_index}")
                     if self.index >= self.prompts_number:
                         break
                     question = self.dataSet.nextPrompt()
