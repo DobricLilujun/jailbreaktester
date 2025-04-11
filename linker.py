@@ -52,10 +52,19 @@ LLM_MODELS = {
         "local": False,
         "class": LLMController.OpenAi,
         "extra": "meta-llama/Llama-2-7b-chat-hf",
-        "hostname":"snt-precision-7920-rack-lama",
+        "hostname":"127.0.0.1",
         "port":"8000",
         "API_key": "sedanisattackingllm"
     },
+    "google/gemma-2-9b": {
+        "local": False,
+        "class": LLMController.OpenAi,
+        "extra": "google/gemma-2-9b",
+        "hostname":"127.0.0.1",
+        "port":"8001",
+        "API_key": "sedanisattackingllm"
+    },
+
     "[LOCAL] Ollama-llama2:7b-chat": {
         "local": True,
         "class": LLMController.Ollama,
