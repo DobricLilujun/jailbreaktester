@@ -70,21 +70,21 @@ LLM_MODELS = {
         "class": LLMController.Ollama,
         "extra": "llama2:7b-chat"
     },
-    "[LOCAL] Quantized-llama2-7b-chat": {
-        "local": True,
-        "class": LLMController.quantized_llama2_7b,
-        "extra": "/home/linux/models/llama-2-7b-chat.Q4_K_M.gguf",
-    },
-    "[LOCAL] Quantized-mistral-7b-chat": {
-        "local": True,
-        "class": LLMController.quantized_mistral_7b,
-        "extra": "/home/linux/models/mistral-7b-v0.1.Q4_K_M.gguf",
-    },
-    "[LOCAL] Quantized-llama3-8b-chat": {
-        "local": True,
-        "class": LLMController.quantized_mistral_7b,
-        "extra": "/home/linux/models/meta-llama-3.1-8b-instruct.Q4_K_M.gguf",
-    },
+    # "[LOCAL] Quantized-llama2-7b-chat": {
+    #     "local": True,
+    #     "class": LLMController.quantized_llama2_7b,
+    #     "extra": "/home/linux/models/llama-2-7b-chat.Q4_K_M.gguf",
+    # },
+    # "[LOCAL] Quantized-mistral-7b-chat": {
+    #     "local": True,
+    #     "class": LLMController.quantized_mistral_7b,
+    #     "extra": "/home/linux/models/mistral-7b-v0.1.Q4_K_M.gguf",
+    # },
+    # "[LOCAL] Quantized-llama3-8b-chat": {
+    #     "local": True,
+    #     "class": LLMController.quantized_mistral_7b,
+    #     "extra": "/home/linux/models/meta-llama-3.1-8b-instruct.Q4_K_M.gguf",
+    # },
 }
 
 
