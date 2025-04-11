@@ -135,13 +135,17 @@ if __name__ == "__main__":
         print("Done! Results are saved in the output directory as .json file.")
         exit(0)
 
-    try:
-        flask_thread = threading.Thread(target=run_flask, daemon=True)
-        flask_thread.start()
-    except:
-        print("Error while starting web server")
+    else:
+        # Start the GUI mode
+        print("Starting GUI mode...")
+        # Start the Flask server in a separate thread
+        try:
+            flask_thread = threading.Thread(target=run_flask, daemon=True)
+            flask_thread.start()
+        except:
+            print("Error while starting web server")
 
-    app = QApplication(sys.argv)
-    view = View()
-    view.show()
-    sys.exit(app.exec_())
+        app = QApplication(sys.argv)
+        view = View()
+        view.show()
+        sys.exit(app.exec_())
