@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Details</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="mt-5">Test Details</h1>
+        <p><strong>Name:</strong> {{ test.name }}</p>
+        <p><strong>Model:</strong> {{ test.model }}</p>
+        <p><strong>Date:</strong> {{ test.timestamp }}</p>
+        <p><strong>DataSet:</strong> {{ test.data_set_path }}</p>
+        <p><strong>Classifier:</strong> {{ test.classifier }}</p>
+        <p><strong>Classifier options:</strong> {{ test.classifier_options }}</p>
+
+
+        <h2 class="mt-4">Metrics</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <h4>Number of prompts:</h4>
+                <span class="badge badge-primary">{{ metrics.total_tests }}</span>
+            </div>
+            <div class="col-md-4">
+                <h4>Number of successfull prompts [Classifier]:</h4>
+                <span class="badge badge-success">{{ metrics.successful_jailbreaks_classifier }}</span>
+            </div>
+            <div class="col-md-4">
+                <h4>ASR (Attack Success Rate) [Classifier] :</h4>
+                <span class="badge badge-success">{{ metrics.asr_classifier }}%</span>
+            </div>
+            <div class="col-md-4">
+                <h4>Number of successfull prompts [Groundtruth]:</h4>
+                <span class="badge badge-secondary">{{ metrics.successful_jailbreaks_groundtruth }}</span>
+            </div>
+            <div class="col-md-4">
+                <h4>ASR (Attack Success Rate) [Groundtruth] :</h4>
+                <span class="badge badge-secondary">{{ metrics.asr_groundtruth }}%</span>
+            </div>
+            <div class="col-md-4">
+                <h4>Precision:</h4>
+                <span class="badge badge-info">{{ metrics.precision }}</span>
+            </div>
+            <div class="col-md-4">
+                <h4>Recall:</h4>
+                <span class="badge badge-warning">{{ metrics.recall }}</span>
+            </div>
+            <div class="col-md-4">
+                <h4>F1 Score:</h4>
+                <span class="badge badge-danger">{{ metrics.f1 }}</span>
+            </div>
+            <div class="col-md-4">
+                <h4>Average Time per request</h4>
+                <span class="badge badge-dark">{{ metrics.average_time }} s.</span>
+            </div>
+        </div>
+
+        <h2 class="mt-4">Confusion Matrix for jailbreak Evaluation</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Predicted Success</th>
+                    <th>Predicted Failure</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <th>Actual Success</th>
+                    <td>{{ metrics.VP }} (True Positive)</td>
+                    <td>{{ metrics.FN }} (False Negative)</td>
+                </tr>
+                <tr>
+                    <th>Actual Failure</th>
+                    <td>{{ metrics.FP }} (False Positive)</td>
+                    <td>{{ metrics.VN }} (True Negative)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 class="mt-4">Prompts and Responses</h2>
+        <ul class="list-group">
+            {% for request in test.requests %}
+            <li class="list-group-item">
+                <h5>Prompt {{ loop.index }}:</h5>
+                <p>{{ request.question }}</p>
+                <h5>Response:</h5>
+                <p>{{ request.response }}</p>
+                <h5>Jailbreak Success Evaluation:</h5>
+                <p>{{request.jailbreak_successful}}</p>
+                <h5>Jailbreak Groundtruth:</h5>
+                <p>{{request.jailbreak_groundtruth}}</p>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <a href="/" class="btn btn-secondary mt-4">Back to list</a>
+    </div>
+</body>
+
+</html>

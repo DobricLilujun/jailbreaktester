@@ -1,0 +1,4 @@
+**/__pycache__/
+graphs.old/
+.env/
+jailguard/utils/config.cfg

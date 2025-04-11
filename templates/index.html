@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jailbreak Tester Campaign</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Jailbreak Campaign List</h1>
+
+        <!-- Formulaire de tri -->
+        <form method="GET" action="/" class="mb-3">
+            <div class="form-row align-items-center">
+                <div class="col-auto">
+                    <label for="sortByModel">Sort by model:</label>
+                    <select class="form-control" id="sortByModel" name="model">
+                        <option value="">All</option>
+                        {% for model in models %}
+                        <option value="{{ model }}" {% if selected_model==model %}selected{% endif %}>
+                            {{ model }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label for="sortByClassifier">Sort by Classifier:</label>
+                    <select class="form-control" id="sortByClassifier" name="classifier">
+                        <option value="">All</option>
+                        {% for classifier in classifiers %}
+                        <option value="{{ classifier }}" {% if selected_classifier==classifier %}selected{% endif %}>
+                            {{ classifier }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto">
+                    <label for="sortByDataSet">Sort by Data Set:</label>
+                    <select class="form-control" id="sortByDataSet" name="dataset">
+                        <option value="">All</option>
+                        {% for dataset in datasets %}
+                        <option value="{{ dataset }}" {% if selected_dataset==dataset %}selected{% endif %}>
+                            {{ dataset }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-auto mt-4">
+                    <button type="submit" class="btn btn-primary">Sort</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Table des tests -->
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Selected</th>
+                    <th>Name</th>
+                    <th>Model</th>
+                    <th>Date</th>
+                    <th>Classifier</th>
+                    <th>Data Set</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for test in tests %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><input type="checkbox" name="timestamps" value="{{ test.timestamp }}" checked></td>
+                    <td>{{ test.name }}</td>
+                    <td>{{ test.model }}</td>
+                    <td>{{ test.timestamp }}</td>
+                    <td>{{ test.classifier }}</td>
+                    <td>{{ test.data_set_path }}</td>
+                    <td>
+                        <a href="/test/{{ test.timestamp }}" class="btn btn-primary">Open Details</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="agreement-stats" class="mt-4 text-center">
+            <!-- Les pourcentages d'accord et de désaccord seront affichés ici -->
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <!-- Graphique ASR -->
+                <div class="card mb-4 shadow-sm">
+                    <img src="/static/asr_plot.png" alt="ASR Plot" class="card-img-top"
+                        onclick="window.open('/static/asr_plot.png', '_blank');">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">ASR Over Campaigns [Classifier]</h5>
+                    </div>
+                </div>
+
+                <!-- Graphique ASR Groudtruth-->
+                <div class="card mb-4 shadow-sm">
+                    <img src="/static/asr_groundtruth_plot.png" alt="ASR Plot" class="card-img-top"
+                        onclick="window.open('/static/asr_groundtruth_plot.png', '_blank');">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">ASR Over Campaigns [Groudtruth]</h5>
+                    </div>
+                </div>
+
+                <!-- Graphique F1-Score -->
+                <div class="card mb-4 shadow-sm">
+                    <img src="/static/f1_plot.png" alt="F1-Score Plot" class="card-img-top"
+                        onclick="window.open('/static/f1_plot.png', '_blank');">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">F1-Score Over Campaigns</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <!-- Graphique Precision -->
+                <div class="card mb-4 shadow-sm">
+                    <img src="/static/precision_plot.png" alt="Precision Plot" class="card-img-top"
+                        onclick="window.open('/static/precision_plot.png', '_blank');">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Precision Over Campaigns</h5>
+                    </div>
+                </div>
+
+                <!-- Graphique Recall -->
+                <div class="card mb-4 shadow-sm">
+                    <img src="/static/recall_plot.png" alt="Recall Plot" class="card-img-top"
+                        onclick="window.open('/static/recall_plot.png', '_blank');">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Recall Over Campaigns</h5>
+                    </div>
+                </div>
+
+                <!-- Graphique Average Time -->
+                <div class="card mb-4 shadow-sm">
+                    <img src="/static/average_time_plot.png" alt="Recall Plot" class="card-img-top"
+                        onclick="window.open('/static/average_time_plot.png', '_blank');">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Average response time</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <button id="export-button" onclick="exportData()" class="btn btn-primary">Export metrics</button>
+        </div>
+        <p></p> 
+
+        <script>
+
+            // Fonction pour exporter les données des campagnes sélectionnées
+    function exportData() {
+        const selectedTimestamps = Array.from(document.querySelectorAll('input[name="timestamps"]:checked'))
+            .map(checkbox => checkbox.value);
+
+        if (selectedTimestamps.length === 0) {
+            alert("Please select at least one campaign.");
+            return;
+        }
+
+        console.log("Timestamps sélectionnés pour exportation:", selectedTimestamps);
+
+        // Créer une URL pour la requête d'exportation
+        fetch(`/export_data?timestamps=${selectedTimestamps.join(',')}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Erreur lors de la génération du fichier JSON.");
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Créer un lien pour télécharger le fichier
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'exported_data.json';  // Nom du fichier téléchargé
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                alert("Data successfully exported !");
+            })
+            .catch(error => {
+                console.error("Erreur réseau:", error);
+                alert("An error occured during data exportation.");
+            });
+    }
+
+            // Fonction pour mettre à jour les graphs
+            function updateGraph() {
+                const selectedTimestamps = Array.from(document.querySelectorAll('input[name="timestamps"]:checked'))
+                    .map(checkbox => checkbox.value);
+
+                console.log("Timestamps sélectionnés:", selectedTimestamps);
+
+                fetch(`/update_graph?timestamps=${selectedTimestamps.join(',')}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log("Graphique mis à jour avec succès");
+
+                            // Recharger les images des graphiques
+                            document.querySelectorAll('img[alt$="Plot"]').forEach(img => {
+                                img.src = img.src.split('?')[0] + '?t=' + new Date().getTime();
+                            });
+
+                            document.getElementById('agreement-stats').innerHTML = `
+                                <p>Agreement between selected classifiers: ${data.agreement_stats.agreement_percentage}%</p>
+                                <p>Disagreement between selected classifiers: ${data.agreement_stats.disagreement_percentage}%</p>
+                            `;
+                        } else {
+                            console.error("Erreur lors de la mise à jour du graphique");
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Erreur réseau:", error);
+                    });
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                updateGraph();
+                document.querySelectorAll('input[name="timestamps"]').forEach(checkbox => {
+                    checkbox.addEventListener('change', updateGraph);
+                });
+            });
+        </script>
+    </div>
+</body>
+
+</html>
