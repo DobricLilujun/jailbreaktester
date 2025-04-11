@@ -284,13 +284,13 @@ class TesterWorker(QObject):
                         else:
                             self.dataSet.record_ground_truth(question, self.user_decision)
                     else:
-                        # evaluation = self.classifierController.classify_responses(
-                        #     prompts=[question], responses=[response]
-                        # )
-                        evaluation = {}
+                        evaluation = self.classifierController.classify_responses(
+                            prompts=[question], responses=[response]
+                        )
+                        # evaluation = {}
 
-                        evaluation[0] = False
-                        evaluation[1] = 0.0
+                        # evaluation[0] = False
+                        # evaluation[1] = 0.0
                         self.state_update.emit(
                             "Last auto evaluation '" + str(evaluation[0]) + "', running..."
                         )
