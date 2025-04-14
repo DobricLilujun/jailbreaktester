@@ -55,6 +55,7 @@ def record_request(output_file, results, question, response, jailbreak_successfu
             "question": question,
             "response": response,
             "jailbreak_successful": jailbreak_successful[0],
+            "embeddings": jailbreak_successful[2],
             "jailbreak_values": jailbreak_successful[1],
             "timestamp": datetime.now().isoformat(),  # Format ISO pour le timestamp
         }
@@ -63,6 +64,7 @@ def record_request(output_file, results, question, response, jailbreak_successfu
             "question": question,
             "response": response,
             "jailbreak_successful": jailbreak_successful[0],
+            "embeddings": jailbreak_successful[2],
             "timestamp": datetime.now().isoformat(),  # Format ISO pour le timestamp
             "jailbreak_groundtruth": jailbreak_successful[0],
         }
@@ -71,6 +73,7 @@ def record_request(output_file, results, question, response, jailbreak_successfu
             "question": question,
             "response": response,
             "jailbreak_successful": jailbreak_successful[0],
+            "embeddings": jailbreak_successful[2],
             "timestamp": datetime.now().isoformat(),  # Format ISO pour le timestamp
         }
     

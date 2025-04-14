@@ -424,13 +424,13 @@ class Pert2Detect(ClassifierController):
 
             self.save_promp_perturbed_and_response(perturbed_prompt, answer,f"./output/prompts_responses_pert2_dectect_{self.smoothllm_num_copies}_{self.smoothllm_pert_types}_{self.smoothllm_pert_pct_min}.json")
 
-        result = self._analyze(responses[0], perturbed_prompt_outputs)
+        result, embeddings = self._analyze(responses[0], perturbed_prompt_outputs)
 
         
         if result < self.threshold:
             return [False, result]
 
-        return [True, result]
+        return [True, result, embeddings]
     
     def save_promp_perturbed_and_response(self, perturbed_prompt: str, answer: str, output_path: str):
         # Create a dictionary for the prompt and response
@@ -569,32 +569,19 @@ class Pert2Detect(ClassifierController):
         # Yes, cosine similarity is initiated to 0 (wrong from a theoretical point of view but we only want to average the simalirty with other afterwaqrds)
         similarities = np.zeros((len(generated_outs), len(generated_outs)))
 
+        embeddings = [model.encode(p) for p in generated_outs]
+
         # Compute cosine for all couple of prompts even between perturbed prompts
         for i in range(len(generated_outs)):
+            for j in range(i + 1, len(generated_outs)):
+                p_emb = embeddings[i]
+                p2_emb = embeddings[j]
 
-            if self.api_key != None:
-                similarities[i] = self._query_sim_text(
-                    generated_outs[i], generated_outs
-                )
-                similarities[i][i] = 0
-            else:
-                for j in range(i + 1, len(generated_outs)):
-
-                    p = generated_outs[i]
-                    p2 = generated_outs[j]
-
-                    p_emb = model.encode(p)
-                    p2_emb = model.encode(p2)
-                    cos_sim = util.cos_sim(p_emb, p2_emb).item()
-
-                    similarities[i][j] = cos_sim
-                    similarities[j][i] = cos_sim
+                cos_sim = util.cos_sim(p_emb, p2_emb).item()
+                similarities[i][j] = cos_sim
+                similarities[j][i] = cos_sim
 
             # For each prompt (initial + perturbed ones), we compute the average similarity of its output against all others
-            avg_values = np.array(
-                [sum(sim) / (len(generated_outs) - 1) for sim in similarities]
-            )
-
             avg_values = np.array(
                 [sum(sim) / (len(generated_outs) - 1) for sim in similarities]
             )
@@ -620,7 +607,7 @@ class Pert2Detect(ClassifierController):
                 )
             )
 
-        return avg_Q1Q2_values[0]
+        return avg_Q1Q2_values[0], embeddings
 
         #     #avg_values = list(map(lambda x: np.exp(1.0-x),similarities[0]))
 

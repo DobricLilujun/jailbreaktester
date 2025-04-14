@@ -36,7 +36,7 @@ LLM_MODELS = {
         "class": LLMController.HF,
         "extra": "TheBloke/Llama-2-7B-Chat-GGUF",
     },
-    "huggingface/mistralai/Mistral-7B-Instru    ct-v0.3": {
+    "huggingface/mistralai/Mistral-7B-Instruct-v0.3": {
         "local": False,
         "API_key": HF_API_KEY,
         "class": LLMController.HF,
