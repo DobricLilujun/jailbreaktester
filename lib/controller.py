@@ -15,6 +15,8 @@ from PyQt5.QtCore import QObject, pyqtSignal, QWaitCondition, QMutex
 from datetime import datetime
 import os
 from tqdm import tqdm
+import torch
+import numpy as np
 
 def init_results(campaign_name, llm_model, data_set_type, data_set_path, auto_mode, classifier, classifier_options):
     """Initialise la structure JSON pour stocker les résultats."""
@@ -50,12 +52,21 @@ def create_output_file(name,classifier):
 
 def record_request(output_file, results, question, response, jailbreak_successful, ground_truth:bool = False):
     """Enregistre les détails de chaque requête dans les résultats et sauvegarde dans le fichier JSON."""
+    embeddings = jailbreak_successful[2]
+    if isinstance(embeddings, np.ndarray):
+        embeddings = embeddings.tolist()
+    elif isinstance(embeddings, torch.Tensor):
+        embeddings = embeddings.detach().cpu().tolist()
+    elif isinstance(embeddings, list):
+        embeddings_list = [embedding.tolist() for embedding in embeddings]
+        embeddings = json.dumps(embeddings_list)
+
     if len(jailbreak_successful) > 1 : # if threshold set
         request_info = {
             "question": question,
             "response": response,
             "jailbreak_successful": jailbreak_successful[0],
-            "embeddings": jailbreak_successful[2],
+            "embeddings": embeddings,
             "jailbreak_values": jailbreak_successful[1],
             "timestamp": datetime.now().isoformat(),  # Format ISO pour le timestamp
         }
@@ -64,7 +75,7 @@ def record_request(output_file, results, question, response, jailbreak_successfu
             "question": question,
             "response": response,
             "jailbreak_successful": jailbreak_successful[0],
-            "embeddings": jailbreak_successful[2],
+            "embeddings": embeddings,
             "timestamp": datetime.now().isoformat(),  # Format ISO pour le timestamp
             "jailbreak_groundtruth": jailbreak_successful[0],
         }
@@ -73,7 +84,7 @@ def record_request(output_file, results, question, response, jailbreak_successfu
             "question": question,
             "response": response,
             "jailbreak_successful": jailbreak_successful[0],
-            "embeddings": jailbreak_successful[2],
+            "embeddings": embeddings,
             "timestamp": datetime.now().isoformat(),  # Format ISO pour le timestamp
         }
     

@@ -428,7 +428,7 @@ class Pert2Detect(ClassifierController):
 
         
         if result < self.threshold:
-            return [False, result]
+            return [False, result, embeddings]
 
         return [True, result, embeddings]
     
@@ -570,43 +570,41 @@ class Pert2Detect(ClassifierController):
         similarities = np.zeros((len(generated_outs), len(generated_outs)))
 
         embeddings = [model.encode(p) for p in generated_outs]
-
+        
         # Compute cosine for all couple of prompts even between perturbed prompts
-        for i in range(len(generated_outs)):
+        for i in range(len(generated_outs)-1):
             for j in range(i + 1, len(generated_outs)):
                 p_emb = embeddings[i]
                 p2_emb = embeddings[j]
-
                 cos_sim = util.cos_sim(p_emb, p2_emb).item()
                 similarities[i][j] = cos_sim
                 similarities[j][i] = cos_sim
 
             # For each prompt (initial + perturbed ones), we compute the average similarity of its output against all others
-            avg_values = np.array(
-                [sum(sim) / (len(generated_outs) - 1) for sim in similarities]
+        avg_values = np.array(
+            [sum(sim) / (len(generated_outs) - 1) for sim in similarities]
+        )
+
+        Q1 = np.percentile(avg_values, 25)
+        Q3 = np.percentile(avg_values, 75)
+        dist_min_Q1 = Q1 - min(avg_values) + 0.0001
+        dist_max_Q3 = max(avg_values) - Q3 + 0.0001
+
+        epsilon = (Q3 - Q1) * 0.0001
+        avg_Q1Q2_values = list(
+            map(
+                lambda _: (
+                    epsilon
+                    if (dist_min_Q1 < epsilon or dist_max_Q3 < epsilon)
+                    else min(
+                        1,
+                        0.9 * max(Q1 - _, 0) / dist_min_Q1
+                        + 0.1 * max(_ - Q3, 0) / dist_max_Q3,
+                    )
+                ),
+                avg_values,
             )
-
-            Q1 = np.percentile(avg_values, 25)
-            Q3 = np.percentile(avg_values, 75)
-            dist_min_Q1 = Q1 - min(avg_values) + 0.0001
-            dist_max_Q3 = max(avg_values) - Q3 + 0.0001
-
-            epsilon = (Q3 - Q1) * 0.0001
-            avg_Q1Q2_values = list(
-                map(
-                    lambda _: (
-                        epsilon
-                        if (dist_min_Q1 < epsilon or dist_max_Q3 < epsilon)
-                        else min(
-                            1,
-                            0.9 * max(Q1 - _, 0) / dist_min_Q1
-                            + 0.1 * max(_ - Q3, 0) / dist_max_Q3,
-                        )
-                    ),
-                    avg_values,
-                )
-            )
-
+        )
         return avg_Q1Q2_values[0], embeddings
 
         #     #avg_values = list(map(lambda x: np.exp(1.0-x),similarities[0]))
