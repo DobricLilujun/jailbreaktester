@@ -419,15 +419,14 @@ class Pert2Detect(ClassifierController):
             answer = self.llm.askPrompt(perturbed_prompt)
             perturbed_prompt_outputs.append(answer)
 
-            print("test- Pertutbed prompt : ", perturbed_prompt)
-            print("test- Answer : ", answer)
+            # print("test- Pertutbed prompt : ", perturbed_prompt)
+            # print("test- Answer : ", answer)
 
-            self.save_promp_perturbed_and_response(perturbed_prompt, answer,'./output/prompts_responses.json')
+            self.save_promp_perturbed_and_response(perturbed_prompt, answer,f"./output/prompts_responses_pert2_dectect_{self.smoothllm_num_copies}_{self.smoothllm_pert_types}_{self.smoothllm_pert_pct_min}.json")
 
         result = self._analyze(responses[0], perturbed_prompt_outputs)
 
         
-
         if result < self.threshold:
             return [False, result]
 
@@ -457,7 +456,7 @@ class Pert2Detect(ClassifierController):
             with open(output_path, 'w') as json_file:
                 json.dump([data], json_file, indent=4)
 
-        print(f"Saved perturbed prompt and answer to {output_path}")
+        # print(f"Saved perturbed prompt and answer to {output_path}")
 
 
     def _generate_perturbed_prompts(self, prompt: str):
@@ -565,7 +564,7 @@ class Pert2Detect(ClassifierController):
         # the matrix of simlarities also contain in row 0 and column 0 data related to initial prompt
         generated_outs = [original_prompt_output] + perturbed_prompt_outputs
 
-        print(generated_outs)
+        # print(generated_outs)
 
         # Yes, cosine similarity is initiated to 0 (wrong from a theoretical point of view but we only want to average the simalirty with other afterwaqrds)
         similarities = np.zeros((len(generated_outs), len(generated_outs)))

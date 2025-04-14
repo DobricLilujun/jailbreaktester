@@ -31,13 +31,13 @@ def init_results(campaign_name, llm_model, data_set_type, data_set_path, auto_mo
     }
 
 
-def create_output_file(name):
+def create_output_file(name,classifier):
     """Crée le dossier de sortie et le fichier pour les résultats."""
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)  # Créer le dossier s'il n'existe pas
     timestamp = datetime.now().strftime("%Y-%m-%d")
     base_file_name = f"{name.replace('/', '_')}_{timestamp}"
-    file_name = base_file_name + ".json"
+    file_name = base_file_name + f"_{classifier.smoothllm_num_copies}_{classifier.smoothllm_pert_types}_{classifier.smoothllm_pert_pct_min}.json"
 
     # Ajouter un suffixe numérique si le fichier existe déjà
     count = 1
@@ -224,7 +224,7 @@ class TesterWorker(QObject):
                 self.classifier,
                 self.classifier_options,
             )
-            self.output_file = create_output_file(self.campaign_name)
+            self.output_file = create_output_file(self.campaign_name, self.classifierController)
         else:
             self.dataSet = DataSetController.GroundTruth(self.data_set_path)
             self.llmController = LLMController.GroundTruth(extra=self.data_set_path)
@@ -291,9 +291,9 @@ class TesterWorker(QObject):
 
                         # evaluation[0] = False
                         # evaluation[1] = 0.0
-                        self.state_update.emit(
-                            "Last auto evaluation '" + str(evaluation[0]) + "', running..."
-                        )
+                        # self.state_update.emit(
+                        #     "Last auto evaluation '" + str(evaluation[0]) + "', running..."
+                        # )
                         record_request(
                             self.output_file, self.results, question, response, evaluation, False
                         )
