@@ -39,7 +39,7 @@ def create_output_file(name,classifier):
     os.makedirs(output_dir, exist_ok=True)  # Créer le dossier s'il n'existe pas
     timestamp = datetime.now().strftime("%Y-%m-%d")
     base_file_name = f"{name.replace('/', '_')}_{timestamp}"
-    file_name = base_file_name + f"_{classifier.smoothllm_num_copies}_{classifier.smoothllm_pert_types}_{classifier.smoothllm_pert_pct_min}.json"
+    file_name = base_file_name + f"_{classifier.smoothllm_num_copies}_{classifier.smoothllm_pert_types[0]}_{classifier.smoothllm_pert_pct_min}.json"
 
     # Ajouter un suffixe numérique si le fichier existe déjà
     count = 1
