@@ -469,7 +469,7 @@ def plot_enveloppe_after_check_answer_emb(metric="cosine",threshold=0.99):
                 #exit condition
                 
                 if key in data.keys():
-                    if data[key]["prob_success"]>threshold:
+                    if data[key]["prob_success"] > threshold:
                         enveloppe_data_jb.append(values)
                         
                     elif data[key]["prob_success"] <1.0-threshold:
