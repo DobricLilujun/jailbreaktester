@@ -13,9 +13,8 @@ import copy
 
 from sentence_transformers import util, SentenceTransformer
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-import evaluate
 
-
+import pandas as pd
 
 
 def save_emb_mat(out_file="embeddings.json"):
@@ -188,16 +187,10 @@ def compute_enveloppe(prompt_metrics):
 
 
 def plot_enveloppe_after_check_answer():
-    #argv[1] file of metrics
-    #argv[2] grountruth with prob success
-    
-    
-        
+
     with open(sys.argv[2], 'r') as file:
         data = json.load(file)
         
-        
-
         with open(sys.argv[1], 'r') as file:
             res_to_plot = json.load(file)
 
@@ -234,6 +227,7 @@ def plot_enveloppe_after_check_answer():
 
 
 def plot_res_after_check_answer():
+
     #argv[1] file of metrics
     #argv[2] grountruth with prob success
     
@@ -272,7 +266,6 @@ def plot_res_after_check_answer():
             plt.show()
 
 
-#Not used
 def save_res_after_check_answer(out_file="plot.json"):
     #argv[1] file with perturbations
     #argv[2:] file with perturbations
@@ -317,9 +310,6 @@ def save_res_after_check_answer(out_file="plot.json"):
 
             for test in data:
                 
-                #first prompt is the original prompts, we exclude unsuccessful attacks:
-                
-
                 prompt = test[0]["original_prompt"]
                 if not prompt in prompt_list:
                     continue
@@ -440,10 +430,303 @@ def save_res(out_file="plot.json"):
     #     avg_values = np.array([sum(sim) / (len(generated_outs) - 1) for sim in similarities])
     #     print(original_prompt,str(avg_values[0]))
 
+def plot_enveloppe_after_check_answer_emb_updated(file_embedding_path, file_gt_path, metric="cosine",threshold=0.99):
+    '''
+    Compute a metric for each type of prompt (jailbrak and no jailbreak) and shows the graph according to percentage
+    argv[1] file of metrics/embeddings
+    argv[2] grountruth with prob success
+    metric: cosine (average cosine) or bleurt
+    threshold: the probability of jailbreak success to consider (!!! THIS is a symetric threshold so excluing all intermediary values!!! e.g. <0.01 + >0.99
+    '''
+        
+    data = pd.read_parquet(file_embedding_path)
+    res_to_plot = pd.read_parquet(file_gt_path)
+
+    enveloppe_data_jb = []
+    enveloppe_data_nojb = []
+
+    
+    ## 分成两个数据
+    for key,values in res_to_plot.items():
+        if key in data.keys():
+            if data[key]["prob_success"] > threshold:
+                enveloppe_data_jb.append(values)
+                
+            elif data[key]["prob_success"] <1.0-threshold:
+                enveloppe_data_nojb.append(values)
+                
+    count = 0
+
+    ## 找到对应的prompt所对应的回答
+    jb_prompt_answers = {}
+    no_jb_prompt_answers = {}
+
+
+    for k,v in data.items():
+        jb=None
+        for output in v["outputs"]:
+            
+            if output[1] == True:
+                jb=output[0]
+        if jb:
+            jb_prompt_answers[k] = jb
+        else:
+            no_jb_prompt_answers[k] = jb
 
 
 
-def plot_enveloppe_after_check_answer_emb(metric="cosine",threshold=0.99):
+    with open(sys.argv[2], 'r') as file:
+        data = json.load(file)
+        
+        with open(sys.argv[1], 'r') as file2:
+            res_to_plot = json.load(file2)
+
+            enveloppe_data_jb = []
+            enveloppe_data_nojb = []
+        
+            
+            for key,values in res_to_plot.items():
+                count+=1
+                #exit condition
+                
+                if key in jb_prompt_answers.keys():
+                    enveloppe_data_jb.append(values)
+                        
+                elif key in no_jb_prompt_answers.keys():
+                    enveloppe_data_nojb.append(values)
+    
+
+    print("handled",count)
+    print("jailbreak",len(enveloppe_data_jb))
+    print("nojailbreak",len(enveloppe_data_nojb))
+    
+
+    dict_ = {}    
+
+    #dirty code below for testing purpose
+    if metric == "cosine":
+
+        for val_prompt in enveloppe_data_jb:
+            for percent,prompt_dicts in val_prompt.items():
+                print(percent)
+                for pdict in prompt_dicts:
+                    print(pdict["cosine"],"----",min(map(lambda _:float(_),pdict["cosine"])))
+                    if 'original_prompt' in pdict.keys():
+                        if not pdict["original_prompt"] in dict_.keys():
+                            dict_[pdict["original_prompt"]] = {}
+                        l = np.mean(list(map(lambda _:float(_),pdict["cosine"][1:])))
+                        print(l)
+                        dict_[pdict["original_prompt"]][percent] = l
+        enveloppe_data_jb_2 = dict_.values()
+        dict_ = {} 
+
+        for val_prompt in enveloppe_data_nojb:
+            for percent,prompt_dicts in val_prompt.items():
+                
+                for pdict in prompt_dicts:
+                    if 'original_prompt' in pdict.keys():
+                        if not pdict["original_prompt"] in dict_.keys():
+                            dict_[pdict["original_prompt"]] = {}
+                        l = np.mean(list(map(lambda _:float(_),pdict["cosine"][1:])))
+                        dict_[pdict["original_prompt"]][percent] = l
+        enveloppe_data_nojb_2 = dict_.values()
+
+    #Check the code below if you want to use other metrics, many are compuetd
+    elif metric=="bleurt":
+
+        model_name = "tum-nlp/NegBLEURT"
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        model = AutoModelForSequenceClassification.from_pretrained(model_name)
+        
+        positive_prompt_set = set()
+        
+        for val_prompt in enveloppe_data_jb:
+            for percent,prompt_dicts in val_prompt.items():
+                
+                orig_prompt = ""
+                for pdict in prompt_dicts:
+                    
+                    pdict["cosine"] = list(map(lambda _:float(_),pdict["cosine"]))
+                    if 'original_prompt' in pdict.keys():
+                        #print(pdict["original_prompt"])
+                        if not pdict["original_prompt"] in dict_.keys():
+                            dict_[pdict["original_prompt"]] = {}
+                        #dict_[pdict["original_prompt"]][percent] = 1.0
+                        dict_[pdict["original_prompt"]][percent] = {}
+                        orig_prompt = pdict["original_prompt"]
+                        #dict_[orig_prompt][percent] = max(map(lambda _:float(_),pdict["cosine"]))-min(map(lambda _:float(_),pdict["cosine"]))
+                        dict_[orig_prompt][percent]['max'] = max(pdict["cosine"][1:])
+                        dict_[orig_prompt][percent]['min'] = min(pdict["cosine"][1:])
+                        dict_[orig_prompt][percent]['mean_orig_cosine'] = np.mean(list(map(lambda _:float(_),pdict["cosine"][1:])))
+                        #index of the farthest 
+                        dict_[orig_prompt][percent]['argmin'] = np.argmin(pdict["cosine"])
+
+                        dict_[orig_prompt][percent]['vals'] = list(map(lambda _:float(_),pdict["cosine"][1:]))
+                        dict_[orig_prompt][percent]['vals_orig'] = list(map(lambda _:float(_),pdict["cosine"][1:]))
+                        dict_[orig_prompt][percent]['1strank'] = 0 
+                        dict_[orig_prompt][percent]['orig_answer'] = pdict["answer"]
+                        
+                        dict_[orig_prompt][percent]['orig_answer'] = jb_prompt_answers[orig_prompt]
+
+                        dict_[orig_prompt][percent]['bleu'] = []
+                k=1
+                for pdict in prompt_dicts:
+                    if not 'original_prompt' in pdict.keys():
+                        l = min(map(lambda _:float(_),pdict["cosine"]))
+                        l2 = max(map(lambda _:float(_),pdict["cosine"]))
+                        dict_[orig_prompt][percent]['max'] = max(dict_[orig_prompt][percent]['max'],l2) 
+                        dict_[orig_prompt][percent]['min'] = min(dict_[orig_prompt][percent]['min'],l)
+                        #dict_[orig_prompt][percent]['vals'].extend(pdict["cosine"][:k])
+                        dict_[orig_prompt][percent]['vals'].extend(pdict["cosine"][k+1:])
+
+                        if pdict["cosine"][0] >= pdict["cosine"][dict_[orig_prompt][percent]['argmin']]:
+                            dict_[orig_prompt][percent]['1strank']+=1
+
+                        #dict_[orig_prompt][percent]['bleu'].append(rouge_metric.compute(predictions=[pdict["answer"]], references=[dict_[orig_prompt][percent]['orig_answer']])['rougeL'])
+        
+                        tokenized = tokenizer([dict_[orig_prompt][percent]['orig_answer']], [pdict["answer"]], return_tensors='pt',max_length=512, padding=True, truncation=True,)
+                        contradiction = model(**tokenized)[0].detach().numpy()[0][0]
+                    
+                        dict_[orig_prompt][percent]['bleu'].append(contradiction)
+
+                        k+=1
+                    
+
+                for pdict in prompt_dicts:
+                    if 'original_prompt' in pdict.keys():
+                        
+                       
+
+                        std_all = np.std(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals'])))
+                        std_orig = np.std(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals_orig'])))
+                        iqr_all =  np.percentile(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals'])),75) - np.percentile(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals'])),25)
+                        iqr_orig =  np.percentile(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals_orig'])),75) - np.percentile(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals_orig'])),25)
+                        mad = np.absolute(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals_orig'])))
+                    
+                        avg_cosine = np.average(dict_[orig_prompt][percent]['vals_orig'])
+                        avg_cosine_all = np.average(dict_[orig_prompt][percent]['vals'])
+            
+                        avg_1strank = 1.0*dict_[orig_prompt][percent]['1strank'] / (len(prompt_dicts)-1)
+                        
+                        avg_bleu = np.average(dict_[orig_prompt][percent]['bleu'])
+                        if avg_bleu > 0:
+                            positive_prompt_set.add(orig_prompt)
+                        dict_[orig_prompt][percent] = avg_bleu
+
+        print("false negative ---->",len(positive_prompt_set))
+
+
+        enveloppe_data_jb_2 = dict_.values()
+
+        positive_prompt_set = set()
+        dict_ = {} 
+
+       
+
+        for val_prompt in enveloppe_data_nojb:
+            for percent,prompt_dicts in val_prompt.items():
+
+                for pdict in prompt_dicts:
+                
+                    pdict["cosine"] = list(map(lambda _:float(_),pdict["cosine"]))
+                    if 'original_prompt' in pdict.keys():
+                        if not pdict["original_prompt"] in dict_.keys():
+                            dict_[pdict["original_prompt"]] = {}
+                        #dict_[pdict["original_prompt"]][percent] = 1.0
+                        dict_[pdict["original_prompt"]][percent] = {}
+                        orig_prompt = pdict["original_prompt"]
+                        #dict_[orig_prompt][percent] = max(map(lambda _:float(_),pdict["cosine"]))-min(map(lambda _:float(_),pdict["cosine"]))
+                        dict_[orig_prompt][percent]['max'] = max(pdict["cosine"][1:])
+                        dict_[orig_prompt][percent]['min'] = min(pdict["cosine"][1:])
+                        dict_[orig_prompt][percent]['mean_orig_cosine'] = np.mean(list(map(lambda _:float(_),pdict["cosine"][1:])))
+
+                        #index of the farthest 
+                        dict_[orig_prompt][percent]['argmin'] = np.argmin(pdict["cosine"])
+
+                        dict_[orig_prompt][percent]['vals'] = list(map(lambda _:float(_),pdict["cosine"][1:]))
+                        dict_[orig_prompt][percent]['vals_orig'] = list(map(lambda _:float(_),pdict["cosine"][1:]))
+                        dict_[orig_prompt][percent]['1strank'] = 0 
+                        dict_[orig_prompt][percent]['orig_answer'] = pdict["answer"]
+                        
+                        dict_[orig_prompt][percent]['bleu'] = []
+                k=1
+                for pdict in prompt_dicts:
+                    if not 'original_prompt' in pdict.keys():
+                        l = min(map(lambda _:float(_),pdict["cosine"]))
+                        l2 = max(map(lambda _:float(_),pdict["cosine"]))
+                        dict_[orig_prompt][percent]['max'] = max(dict_[orig_prompt][percent]['max'],l2) 
+                        dict_[orig_prompt][percent]['min'] = min(dict_[orig_prompt][percent]['min'],l)
+                        #dict_[orig_prompt][percent]['vals'].extend(pdict["cosine"][:k])
+                        dict_[orig_prompt][percent]['vals'].extend(pdict["cosine"][k+1:])
+
+                        if pdict["cosine"][0] >= pdict["cosine"][dict_[orig_prompt][percent]['argmin']]:
+                            dict_[orig_prompt][percent]['1strank']+=1
+
+                        #dict_[orig_prompt][percent]['bleu'].append(rouge_metric.compute(predictions=[pdict["answer"]], references=[dict_[orig_prompt][percent]['orig_answer']])['rougeL'])
+
+                        tokenized = tokenizer([dict_[orig_prompt][percent]['orig_answer']], [pdict["answer"]], return_tensors='pt', max_length=512, padding=True, truncation=True,)
+                        
+                 
+
+                        contradiction = model(**tokenized)[0].detach().numpy()[0][0]
+                        
+                        dict_[orig_prompt][percent]['bleu'].append(contradiction)
+                      
+
+                        k+=1
+                    
+
+                for pdict in prompt_dicts:
+                    if 'original_prompt' in pdict.keys():
+                        
+                        #dict_[pdict["original_prompt"]][percent] =  dict_[orig_prompt][percent]['max'] -  dict_[orig_prompt][percent]['min']
+                        #print(dict_[orig_prompt][percent]['vals'])
+                        #dict_[orig_prompt][percent] = np.percentile(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals'])),75) - np.percentile(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals'])),25)
+                        #dict_[orig_prompt][percent] = np.std(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals']))) 
+
+                        std_all = np.std(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals'])))
+                        std_orig = np.std(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals_orig'])))
+                        iqr_all =  np.percentile(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals'])),75) - np.percentile(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals'])),25)
+                        iqr_orig =  np.percentile(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals_orig'])),75) - np.percentile(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals_orig'])),25)
+                        mad = np.absolute(sorted(map(lambda _:float(_),dict_[orig_prompt][percent]['vals_orig'])))
+                    
+                        avg_cosine = np.average(dict_[orig_prompt][percent]['vals_orig'])
+                        avg_cosine_all = np.average(dict_[orig_prompt][percent]['vals'])
+            
+                        avg_1strank = 1.0*dict_[orig_prompt][percent]['1strank'] / (len(prompt_dicts)-1)
+                        
+                        avg_bleu = np.average(dict_[orig_prompt][percent]['bleu'])
+                        if avg_bleu > 0:
+                            positive_prompt_set.add(orig_prompt)
+        
+
+                        dict_[orig_prompt][percent] = avg_bleu
+
+
+
+        print("no jailbreak (true positive) ---->",len(positive_prompt_set))
+        enveloppe_data_nojb_2 = dict_.values()
+
+
+
+    env_jb = compute_enveloppe(enveloppe_data_jb_2)
+    
+    env_nojb=compute_enveloppe(enveloppe_data_nojb_2)
+    
+    
+    plt.plot(env_jb[0], env_jb[3], label="jailbreak")
+    plt.plot(env_nojb[0], env_nojb[3], label="no_jailbreak")
+    
+    plt.fill_between(env_jb[0], env_jb[1], env_jb[2], alpha=0.2)
+    plt.fill_between(env_nojb[0], env_nojb[1], env_nojb[2], alpha=0.2)
+    
+
+    plt.legend()
+    plt.show()
+
+
+
+def plot_enveloppe_after_check_answer_emb(metric="cosine", threshold=0.99):
     '''
     Compute a metric for each type of prompt (jailbrak and no jailbreak) and shows the graph according to percentage
     argv[1] file of metrics/embeddings
@@ -733,7 +1016,7 @@ def plot_enveloppe_after_check_answer_emb(metric="cosine",threshold=0.99):
 
     env_jb = compute_enveloppe(enveloppe_data_jb_2)
     
-    env_nojb=compute_enveloppe(enveloppe_data_nojb_2)
+    env_nojb=  compute_enveloppe(enveloppe_data_nojb_2)
     
     
     plt.plot(env_jb[0], env_jb[3], label="jailbreak")
@@ -742,7 +1025,7 @@ def plot_enveloppe_after_check_answer_emb(metric="cosine",threshold=0.99):
     plt.fill_between(env_jb[0], env_jb[1], env_jb[2], alpha=0.2)
     plt.fill_between(env_nojb[0], env_nojb[1], env_nojb[2], alpha=0.2)
     
-
+    plt.savefig("comparison_plot.png", dpi=300, bbox_inches="tight")  # Save with h
     plt.legend()
     plt.show()
 
@@ -754,10 +1037,10 @@ if __name__ == "__main__":
 
     plot_enveloppe_after_check_answer_emb(metric="bleurt")
     
-    #plot_res_after_check_answer()
-    #plot_enveloppe_after_check_answer()
+    # plot_res_after_check_answer()
+    # plot_enveloppe_after_check_answer()
 
-    #plot_res()
+    # plot_res()
     
 
 # How to use it?
