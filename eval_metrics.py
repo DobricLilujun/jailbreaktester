@@ -102,7 +102,6 @@ def check_answer():
 
                 answer,jailbreak = v["outputs"][i]
                 if jailbreak:
-
                     os.system('cls||clear')
                 #We only check if it says it is jailbeaked as we used simple pattern matching to exclude false one
                 
