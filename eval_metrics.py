@@ -1013,11 +1013,9 @@ def plot_enveloppe_after_check_answer_emb(metric="cosine", threshold=0.99):
         enveloppe_data_nojb_2 = dict_.values()
 
 
-
     env_jb = compute_enveloppe(enveloppe_data_jb_2)
     
     env_nojb=  compute_enveloppe(enveloppe_data_nojb_2)
-    
     
     plt.plot(env_jb[0], env_jb[3], label="jailbreak")
     plt.plot(env_nojb[0], env_nojb[3], label="no_jailbreak")
@@ -1032,9 +1030,9 @@ def plot_enveloppe_after_check_answer_emb(metric="cosine", threshold=0.99):
 
 
 if __name__ == "__main__":
-    #save_emb_mat("out_test25.json")
-    #check_answer()
 
+    save_emb_mat("out_test25.json")
+    #check_answer()
     plot_enveloppe_after_check_answer_emb(metric="bleurt")
     
     # plot_res_after_check_answer()
