@@ -17,7 +17,7 @@ from sentence_transformers import SentenceTransformer, util
 import time
 from pathlib import Path
 import shutil
-
+from jailguard.main_txt import generate_variants, generate_variants_updated, calculate_divergence_and_detect_attack, calculate_divergence_and_detect_attack_updated
 # Configuration for retry parameters
 MAX_RETRIES = 3  # Maximum number of retries
 RETRY_DELAY = 2  # Delay between retries, in seconds
@@ -125,6 +125,8 @@ class JailGuard(ClassifierController):
             check=True,
         )
 
+        generate_variants(prompt,self.mutator, self.variant_save_dir, self.number)
+
         # Test variant
         os.mkdir(self.response_save_dir)
         # Iterate over files in /variant
@@ -174,6 +176,57 @@ class JailGuard(ClassifierController):
             return value, max_div
 
         return False, 0
+
+
+
+class JailGuardUpdated(ClassifierController):
+
+    def __init__(
+        self, api_key: str = None, extra: str = None, llm: LLMController = None
+    ):
+
+        pattern = r"--(\w+)\s+(\S+)"
+        matches = re.findall(pattern, extra)
+
+        # Créer un dictionnaire avec les paires clé-valeur
+        extra_dict = {key: value for key, value in matches}
+
+        for key in extra_dict:
+            print("Detected parameters :")
+            print("\t", str(key), "value: ", extra_dict.get(key))
+
+        # Convertir les valeurs et les assigner aux bonnes variables
+        self.mutator = str(extra_dict.get("mutator"))
+        self.variant_save_dir = Path(str(extra_dict.get("variant_save_dir"))).resolve()
+        self.response_save_dir = Path(
+            str(extra_dict.get("response_save_dir"))
+        ).resolve()
+        self.number = int(extra_dict.get("number"))
+        self.threshold = float(extra_dict.get("threshold"))
+
+        self.api_key = api_key
+        self.llm = llm
+
+    def _to_hex_string(self, text):
+        """Convertit les caractères spéciaux en leur représentation hexadécimale avec %."""
+        return ''.join(f'%{ord(c):02X}' if not c.isalnum() else c for c in text)
+
+    def classify_responses(
+        self, prompts: list[str], responses: list[str]
+    ) -> list[bool]:
+
+        prompt = self._to_hex_string(prompts[0])
+        generated_prompts_list = generate_variants_updated(prompt,self.mutator, self.variant_save_dir, self.number)
+
+        responses = []
+        for prompt in generated_prompts_list:
+            response = self.llm.askPrompt(prompt[0])
+            responses.append(response)
+
+
+        cls_dict = calculate_divergence_and_detect_attack_updated(responses = responses, number = self.number, threshold=self.threshold)
+
+        return cls_dict, generated_prompts_list, responses
     
 
 
@@ -395,7 +448,7 @@ class Pert2Detect(ClassifierController):
         extra_dict = {key: value for key, value in matches}
 
         for key in extra_dict:
-            print("Detected parameters :")
+            # print("Detected parameters :")
             print("\t", str(key), "value: ", extra_dict.get(key))
 
         # Convertir les valeurs et les assigner aux bonnes variables
@@ -729,10 +782,10 @@ class SmoothLLM(ClassifierController):
             answer = self.llm.askPrompt(perturbed_prompt)
             perturbed_prompt_outputs.append(answer)
 
-            print("Pertutbed prompt : ", perturbed_prompt)
-            print("Answer : ", answer)
+            # print("Pertutbed prompt : ", perturbed_prompt)
+            # print("Answer : ", answer)
 
-        return self._analyze(responses[0], perturbed_prompt_outputs)
+        return self._analyze(responses[0], perturbed_prompt_outputs), perturbed_prompts, perturbed_prompt_outputs
 
 
     def _generate_perturbed_prompts(self, prompt: str):
@@ -789,7 +842,7 @@ class SmoothLLM(ClassifierController):
         mean = np.mean(jailbroken_list)
 
         if mean > 0.5 : 
-            return [True, mean]
+            return [True, mean], jailbroken_list
         else :
-            return [False, mean]
+            return [False, mean], jailbroken_list
         

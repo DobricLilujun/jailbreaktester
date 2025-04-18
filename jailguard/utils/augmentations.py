@@ -148,7 +148,7 @@ def policy_aug_text(text_list,level='0.24-0.52-0.24',pool='PI-TI-TL'):
     probability_list=[sum(probability_list[:i]) for i in range(len(level))]
     randnum=np.random.random()
     index=find_index(probability_list,randnum)
-    print(index,randnum)
+    # print(index,randnum)
     output_list=mutator_list[index](text_list)
     return output_list
 

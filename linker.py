@@ -126,6 +126,10 @@ CLASSIFIER_MODELS = {
         "class": ClassifierController.JailGuard,
         "extra": '--mutator "PL" --variant_save_dir ./jailguard/variant --response_save_dir ./jailguard/response --number 8 --threshold 0.02',
     },
+    "JailGuardUpdated": {
+        "class": ClassifierController.JailGuardUpdated,
+        "extra": '--mutator "PL" --variant_save_dir ./jailguard/variant --response_save_dir ./jailguard/response --number 8 --threshold 0.02',
+    },
     "SmoothLLM": {
         "class": ClassifierController.SmoothLLM,
         "extra": '--smoothllm_num_copies 2 --smoothllm_pert_types ["RandomSwapPerturbation","RandomPatchPerturbation"] --smoothllm_pert_pct_min 5 --smoothllm_pert_pct_max 10',

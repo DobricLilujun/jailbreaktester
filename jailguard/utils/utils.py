@@ -178,7 +178,7 @@ def determine_blocked(text_list,threshold=1):
     return False,min_count
 
 
-def update_divergence(output_list,name,image_dir,select_number,vmax=0.02,simialrity_eval='spacy',metric=None,top_string=None):
+def update_divergence(output_list,name,image_dir,select_number,metric,vmax=0.02,simialrity_eval='spacy',top_string=None):
     # check block words
     all_block=determine_blocked(output_list)
     # get similarity
@@ -204,9 +204,9 @@ def update_divergence(output_list,name,image_dir,select_number,vmax=0.02,simialr
             if i != j:
                 divergence_matrix[i, j] = get_divergence(similarity_matrix,i,j)
     divergence_matrix=np.clip(divergence_matrix, None, 100)
-    save_name=f"{select_number}.png"
-    image_path=os.path.join(image_dir,save_name)
-    visualize(divergence_matrix,image_path,vmax=vmax)
+    # save_name=f"{select_number}.png"
+    # image_path=os.path.join(image_dir,save_name)
+    # visualize(divergence_matrix,image_path,vmax=vmax)
 
     tmp_name=f'{name}-{select_number}'
     result_dict={}
@@ -219,4 +219,4 @@ def detect_attack(max_div,jailbreak_keywords,threshold):
     if max_div>threshold:
         return True
     else:
-        return jailbreak_keywords[0]
+        return False

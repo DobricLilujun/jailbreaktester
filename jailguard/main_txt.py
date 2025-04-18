@@ -1,8 +1,8 @@
 import argparse
 import os
-os.environ["CUDA_VISIBLE_DEVICES"]="3"
+# os.environ["CUDA_VISIBLE_DEVICES"]="3"
 import sys
-sys.path.append('./utils')
+sys.path.append('./jailguard/utils')
 from utils import *
 import numpy as np
 import uuid
@@ -56,7 +56,26 @@ def generate_variants(prompt, mutator, variant_save_dir, number):
             with open(target_path, 'w') as f:
                 f.writelines(output_result)
 
-    print(f"Generated {number} variants in directory: {variant_save_dir}")
+    # print(f"Generated {number} variants in directory: {variant_save_dir}")
+
+
+def generate_variants_updated(prompt, mutator, variant_save_dir, number):
+    number = int(number)
+    prompt = from_hex_string(prompt)
+
+    if not os.path.exists(variant_save_dir):
+        os.makedirs(variant_save_dir)
+    output_results = []
+    # Generate variants
+    for i in range(number):
+        tmp_method = get_method(mutator)
+        origin_text = prompt
+
+        if isinstance(origin_text, str):
+            output_result = tmp_method(text_list=[origin_text])
+            output_results.append(output_result)
+
+    return output_results
 
 # Function 2: Generate responses from variants
 def generate_responses(variant_save_dir, response_save_dir):
@@ -92,13 +111,12 @@ def generate_responses(variant_save_dir, response_save_dir):
             with open(new_save_path, 'w') as f:
                 f.writelines(res_content)
 
-    print(f"Generated responses in directory: {response_save_dir}")
+    # print(f"Generated responses in directory: {response_save_dir}")
 
 # Function 3: Calculate divergence and detect attack
 def calculate_divergence_and_detect_attack(response_save_dir, number, threshold):
     number = int(number)
     threshold = float(threshold)
-
     metric = spacy.load("en_core_web_md")
     avail_dir = response_save_dir
     check_list = [os.path.join(avail_dir, check) for check in os.listdir(avail_dir)]
@@ -110,6 +128,19 @@ def calculate_divergence_and_detect_attack(response_save_dir, number, threshold)
         print("value: False", "max_div: ", max_div)
     else:
         print("value: True", "max_div: ", max_div)
+
+def calculate_divergence_and_detect_attack_updated(responses, number, threshold):
+    number = int(number)
+    threshold = float(threshold)
+    metric = spacy.load("en_core_web_md")
+    max_div, jailbreak_keywords = update_divergence(output_list = responses, name = "test", image_dir = "output/images", select_number =number , metric=metric)
+    detection_result = detect_attack(max_div, jailbreak_keywords, threshold)
+    # if detection_result:
+    #     print("value: False", "max_div: ", max_div)
+    # else:
+    #     print("value: True", "max_div: ", max_div)
+
+    return {"cls_results":detection_result, "max_div":max_div}
 
 # Example usage of the refactored functions
 if __name__ == '__main__':
