@@ -61,6 +61,7 @@ def record_request(output_file, results, question, response, jailbreak_successfu
         embeddings_list = [embedding.tolist() for embedding in embeddings]
         embeddings = json.dumps(embeddings_list)
 
+    embeddings = []
     if len(jailbreak_successful) > 1 : # if threshold set
         request_info = {
             "question": question,
