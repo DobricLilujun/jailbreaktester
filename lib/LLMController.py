@@ -105,10 +105,16 @@ class OpenAi(LLMController):
 
         #If a sepcifc server is specified, we use it (for vLLM use). Otherwise defaut OpenAI access
         if hostname:
+            if port == "8002":
+                self.model_name = "gemma"
+            elif port == "8000":
+                self.model_name = "llama"
+            else:
+                self.model_name = ""
             self.client = OpenAI(
-            #api_key=api_key,
-                base_url="http://"+hostname+":"+port+"/v1"
-            )
+                #api_key=api_key,
+                    base_url="http://"+hostname+":"+port+"/v1"
+                )
         else:
             self.client = OpenAI()
       

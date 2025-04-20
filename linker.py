@@ -56,12 +56,12 @@ LLM_MODELS = {
         "port":"8000",
         "API_key": OPENAI_API_KEY
     },
-    "google/gemma-2-9b": {
+    "google/gemma-2-9b-it": {
         "local": False,
         "class": LLMController.OpenAi,
-        "extra": "google/gemma-2-9b",
+        "extra": "google/gemma-2-9b-it",
         "hostname":"0.0.0.0",
-        "port":"8000",
+        "port":"8002",
         "API_key": OPENAI_API_KEY
     },
     "google/gemma-2-2b-it": {
