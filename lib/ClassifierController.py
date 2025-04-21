@@ -470,12 +470,13 @@ class Pert2Detect(ClassifierController):
 
         for perturbed_prompt in perturbed_prompts:
             answer = self.llm.askPrompt(perturbed_prompt)
+            # answer = ""
             perturbed_prompt_outputs.append(answer)
 
             # print("test- Pertutbed prompt : ", perturbed_prompt)
             # print("test- Answer : ", answer)
 
-            self.save_promp_perturbed_and_response(perturbed_prompt, answer,f"./output/prompts_responses_pert2_dectect_{self.smoothllm_num_copies}_{self.smoothllm_pert_types[0]}_{self.smoothllm_pert_pct_min}.json")
+            self.save_promp_perturbed_and_response(perturbed_prompt, answer,f"./output/{self.llm.model_name}_prompts_responses_pert2_dectect_{self.smoothllm_num_copies}_{self.smoothllm_pert_types[0]}_{self.smoothllm_pert_pct_min}.json")
 
         result, embeddings = self._analyze(responses[0], perturbed_prompt_outputs)
 
