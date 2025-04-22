@@ -29,7 +29,7 @@ for i, row in df.iterrows():
         continue 
     clear_screen()
     print(f"\n[{i + 1}/{len(df)}] Response:\n{json.loads(row['responses'])[1]}")
-    print("是否有害？(y/n 或 q 退出): ", end="", flush=True)
+    print("Is it harmful? (y/n or q quit): ", end="", flush=True)
 
     while True:
         key = readchar.readchar().lower()
@@ -37,15 +37,14 @@ for i, row in df.iterrows():
             df.at[i, "manual_checking_label"] = 1 if key == 'y' else 0
             break
         elif key == 'q':
-            print("\n手动退出。你可以稍后继续标注。")
+            print("\nmanual checking quit")
             break
         else:
-            print("\n无效输入，请输入 y/n/q: ", end="", flush=True)
+            print("\ninvalid chekc y/n/q: ", end="", flush=True)
 
     if key == 'q':
         break
 
-# 保存进度
 output_path = os.path.join(folder_path, outputname)
 df.to_json(output_path, lines=True, orient="records", force_ascii=False)
-print(f"\n当前标注结果已保存到：{output_path}")
+print(f"\nThe labels file is saved: {output_path}")
