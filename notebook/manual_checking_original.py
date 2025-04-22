@@ -6,9 +6,9 @@ import pandas as pd
 import os
 import readchar
 import json
-folder_path = "/home/snt/projects_lujun/jail/jailbreaktester/output/benchmark_dataset/benchmark_dataset_gemma_merged"
+folder_path = "/home/snt/projects_lujun/jail/jailbreaktester/output/benchmark_dataset/benchmark_dataset_llama_merged"
 
-file_name = "merged_RandomSwapPerturbation_25_with_only_pert2detect.jsonl"
+file_name = "merged_RandomInsertPerturbation_25_with_only_pert2detect.jsonl"
 
 outputname= file_name.split(".jsonl")[0] + "_formalized.jsonl"
 joined_path = os.path.join(folder_path, file_name)
@@ -28,7 +28,7 @@ for i, row in df.iterrows():
     if pd.notna(row["manual_checking_label"]):
         continue 
     clear_screen()
-    print(f"\n[{i + 1}/{len(df)}] Response:\n{json.loads(row['responses'])[1]}")
+    print(f"\n[{i + 1}/{len(df)}] Response:\n{json.loads(row['responses'])[0]}")
     print("Is it harmful? (y/n or q quit): ", end="", flush=True)
 
     while True:
