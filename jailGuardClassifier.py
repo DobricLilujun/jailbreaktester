@@ -46,11 +46,11 @@ def evaluate_prompt_JailGuard(question: str, llm_controller, classifier_controll
 
     save_row = {}
     save_row["cls_label"] =  cls_dict["cls_results"]
-    save_row["max_div"] =  cls_dict["max_div"]
-    save_row["perturbed_prompts"] = generated_prompts_list
-    save_row["perturbed_prompt_outputs"] = responses
-    save_row["original_prompt"] = question
-    save_row["original_response"] = response
+    save_row["cls_max_div"] =  cls_dict["max_div"]
+    save_row["cls_perturbed_prompts"] = generated_prompts_list
+    save_row["cls_perturbed_prompt_outputs"] = responses
+    save_row["cls_original_prompt"] = question
+    save_row["cls_original_response"] = response
     return save_row
 
 
