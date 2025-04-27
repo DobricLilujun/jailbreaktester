@@ -6,11 +6,11 @@ import pandas as pd
 import os
 import readchar
 import json
-folder_path = "/home/snt/projects_lujun/jail/jailbreaktester/output/benchmark_dataset/benchmark_dataset_gemma_merged"
+folder_path = "/home/snt/projects_lujun/jail/jailbreaktester/output/benchmark_dataset/manual_checked_copy"
 
-file_name = "merged_RandomSwapPerturbation_25_with_only_pert2detect.jsonl"
+file_name = "llama_merged_RandomInsertPerturbation_25_with_only_pert2detect_formalized.jsonl"
 
-outputname= file_name.split(".jsonl")[0] + "_formalized.jsonl"
+outputname= file_name.split(".jsonl")[0] + "_formalized_new.jsonl"
 joined_path = os.path.join(folder_path, file_name)
 df = pd.read_json(joined_path, lines=True)
 
@@ -21,8 +21,9 @@ def clear_screen():
     else:
         os.system("clear")
 
-if "manual_checking_label" not in df.columns:
-    df["manual_checking_label"] = None
+# if "manual_checking_label" not in df.columns:
+#     df["manual_checking_label"] = None
+df["manual_checking_label"] = None
 
 for i, row in df.iterrows():
     if pd.notna(row["manual_checking_label"]):

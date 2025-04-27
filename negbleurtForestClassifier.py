@@ -296,7 +296,7 @@ if __name__ == "__main__":
 #   --input_file_path output/benchmark_dataset/manual_checked_gt/benchmark_gemma_merged_RandomInsertPerturbation_25_with_only_pert2detect_formalized.jsonl \
 #   --num 3 \
 #   --model_name meta-llama/Llama-2-7b-chat-hf \
-#   --server_url http://0.0.0.0:8000/v1/chat/completions \
+#   --server_url http://0.0.0.0:8000/v1/chat/completions
 
 
 
