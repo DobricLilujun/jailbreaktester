@@ -9,7 +9,10 @@ While working on LLM jailbreaking, our team found it difficult to easily compare
 ### I. Perform a test campaign by hand
 The primary use of the tool is to run test campaigns on multiple LLMs using different datasets.
 
-<img src="images/usecase1.png" align="center" />
+
+<div style="text-align: center;">
+    <img src="images/usecase1.png" alt="Figure 1: Tool Interface (Usecase 1)" width="100%">
+</div>
 
 
 The user can select one of the LLMs they have implemented (see instructions below), a dataset type, and a classifier if "Auto mode" is enabled.
@@ -19,7 +22,9 @@ Without Auto mode enabled, the user will be required to manually determine wheth
 ### II. Perform a test campaign with a classifier
 Users can also utilize their own implemented classifier. In this mode, the tool will automatically determine whether the jailbreak is successful based on the classifier's evaluation.
 
-<img src="images/usecase2.png" align="center" />
+<div style="text-align: center;">
+    <img src="images/usecase2.png" alt="Figure 1: Tool Interface (Usecase 2)" width="100%">
+</div>
 
 If the classifier requires options, they can be entered in the text box on the right.
 
