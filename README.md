@@ -11,7 +11,7 @@ The primary use of the tool is to run test campaigns on multiple LLMs using diff
 
 
 <div style="text-align: center;">
-    <img src="images/usecase1.png" alt="Figure 1: Tool Interface (Usecase 1)" width="100%">
+    <img src="images/usecase1.png" alt="Figure 1: Tool Interface (Usecase 1)" width="50%">
 </div>
 
 
@@ -23,7 +23,7 @@ Without Auto mode enabled, the user will be required to manually determine wheth
 Users can also utilize their own implemented classifier. In this mode, the tool will automatically determine whether the jailbreak is successful based on the classifier's evaluation.
 
 <div style="text-align: center;">
-    <img src="images/usecase2.png" alt="Figure 1: Tool Interface (Usecase 2)" width="100%">
+    <img src="images/usecase2.png" alt="Figure 1: Tool Interface (Usecase 2)" width="50%">
 </div>
 
 If the classifier requires options, they can be entered in the text box on the right.
