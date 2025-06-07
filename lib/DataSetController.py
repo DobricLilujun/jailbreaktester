@@ -1,12 +1,3 @@
-"""
-File name: DataSetController.py
-Author: Nathan Foucher 
-Contact: nathan.foucher@ext.uni.lu
-Created: 30/09/2024
-Version: 1.0
-Description: File where is defined the abstract class to communicate with the datasets. You need to define your own implementations of the abstracts methods in this file. 
-"""
-
 from abc import ABC, abstractmethod
 import json
 from typing import Tuple
@@ -136,7 +127,7 @@ class GroundTruth(DataSetController):
         requests = self.data.get("requests", [])
 
         requests[self.current_index]["jailbreak_groundtruth"] = groundtruth[0]
-        
+
         self.current_index += 1
 
         # Write the updated data back to the original file

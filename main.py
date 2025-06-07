@@ -1,12 +1,3 @@
-"""
-File name: main.py
-Author: Nathan Foucher 
-Contact: nathan.foucher@ext.uni.lu
-Created: 30/09/2024
-Version: 1.1
-Description: Main file used to run Jailbreak Tester. 
-"""
-
 import sys
 import threading
 from PyQt5.QtWidgets import QApplication
@@ -16,9 +7,11 @@ import argparse
 from lib.controller import TesterWorker
 from linker import LLM_MODELS, DATA_SET_TYPE, CLASSIFIER_MODELS
 
+
 def validate_campaign_name(camaign_name):
-    if camaign_name == "" :
+    if camaign_name == "":
         raise ValueError("No campaign name setted.")
+
 
 def validate_llm_model(llm_model):
     if llm_model not in LLM_MODELS:
@@ -91,7 +84,7 @@ if __name__ == "__main__":
         try:
             # Validate campaign name
             validate_campaign_name(args.name)
-            
+
             # Validate the LLM model
             validate_llm_model(args.llm_model)
 
@@ -100,11 +93,11 @@ if __name__ == "__main__":
 
             # Validate the classifier
             validate_classifier(args.classifier)
-            
+
             # If no options use the default ones in linker
-            if args.classifier_options == None : 
-                classifier_options = CLASSIFIER_MODELS.get(args.classifier).get('extra')
-            else :
+            if args.classifier_options == None:
+                classifier_options = CLASSIFIER_MODELS.get(args.classifier).get("extra")
+            else:
                 classifier_options = args.classifier_options
 
         except ValueError as e:

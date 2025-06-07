@@ -48,7 +48,7 @@ device = "cuda:0" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 
 ########################################## Used for online available downloading models#######################
-project_root_path = "/home/snt/projects_lujun/jail/jailbreaktester"
+project_root_path = "**"
 
 model_negation_name = "tum-nlp/NegBLEURT"
 model_emb_name = "NovaSearch/stella_en_1.5B_v5"
@@ -60,19 +60,6 @@ input_folder_path = os.path.join(
     project_root_path,
     "output/benchmark_dataset/benchmark_exp_results/negbleurtForest_processed_corrected",
 )
-
-########################################## Used for local downloaded models#######################
-# project_root_path = "/home/Llama/Personal_Directories/srb"
-
-# model_negation_name = os.path.join(project_root_path, "NegBLEURT")
-# model_emb_name = os.path.join(project_root_path, "stella_en_1.5B_v5")
-# model_clssifier_name = os.path.join(project_root_path, "bart-large-mnli")
-# output_folder_name = "negbleurtForest_processed_evaluated_single_prompts"
-
-# input_folder_path = os.path.join(
-#     project_root_path,
-#     "output/benchmark_dataset/benchmark_exp_results/negbleurtForest_processed_corrected",
-# )
 
 
 ########################################## Definition OF Function of NegBlerut Forest#######################
@@ -228,7 +215,7 @@ def get_max_sentence_based_on_labels(text):
     if len(max_scores) >= 2:
         max_scores_array = np.array(max_scores)
         top2_indices = np.argsort(max_scores_array)[-2:][::-1]
-        # 使用 argsort 得到从小到大的索引，然后取最后两个并反转顺序（从大到小）
+
         score1, score2 = max_scores[top2_indices[0]], max_scores[top2_indices[1]]
         orig_index1, orig_index2 = (
             max_indices[top2_indices[0]],
@@ -236,9 +223,9 @@ def get_max_sentence_based_on_labels(text):
         )
 
         if abs(score1 - score2) < 0.2:
-            final_index = min(orig_index1, orig_index2)  # 选择原始 index 较小的
+            final_index = min(orig_index1, orig_index2)
         else:
-            final_index = orig_index1  # 选择得分最高的那个
+            final_index = orig_index1
 
         final_text = result_dicts[final_index]["text"]
     elif len(max_scores) == 1:

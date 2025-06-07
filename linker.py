@@ -1,12 +1,3 @@
-"""
-File name: linker.py
-Author: Nathan Foucher 
-Contact: nathan.foucher@ext.uni.lu
-Created: 30/09/2024
-Version: 1.1
-Description: Linker file used to link your own methods, based on the abstracts class LLMController and DataSetController, to the application.
-"""
-
 import lib.LLMController as LLMController
 import lib.DataSetController as DataSetController
 import lib.ClassifierController as ClassifierController
@@ -52,30 +43,30 @@ LLM_MODELS = {
         "local": False,
         "class": LLMController.OpenAi,
         "extra": "meta-llama/Llama-2-7b-chat-hf",
-        "hostname":"0.0.0.0",
-        "port":"8000",
-        "API_key": OPENAI_API_KEY
+        "hostname": "0.0.0.0",
+        "port": "8000",
+        "API_key": OPENAI_API_KEY,
     },
     "google/gemma-2-9b-it": {
         "local": False,
         "class": LLMController.OpenAi,
         "extra": "google/gemma-2-9b-it",
-        "hostname":"0.0.0.0",
-        "port":"8002",
-        "API_key": OPENAI_API_KEY
+        "hostname": "0.0.0.0",
+        "port": "8002",
+        "API_key": OPENAI_API_KEY,
     },
     "google/gemma-2-2b-it": {
         "local": False,
         "class": LLMController.OpenAi,
         "extra": "google/gemma-2-2b-it",
-        "hostname":"0.0.0.0",
-        "port":"8000",
-        "API_key": OPENAI_API_KEY
+        "hostname": "0.0.0.0",
+        "port": "8000",
+        "API_key": OPENAI_API_KEY,
     },
     "[LOCAL] Ollama-llama2:7b-chat": {
         "local": True,
         "class": LLMController.Ollama,
-        "extra": "llama2:7b-chat"
+        "extra": "llama2:7b-chat",
     },
     # "[LOCAL] Quantized-llama2-7b-chat": {
     #     "local": True,

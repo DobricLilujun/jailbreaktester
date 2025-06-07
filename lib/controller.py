@@ -1,12 +1,3 @@
-"""
-File name: controller.py
-Author: Nathan Foucher 
-Contact: nathan.foucher@ext.uni.lu
-Created: 30/09/2024
-Version: 1.0
-Description: Controller of the app. This file handle the worker that will perform the tests. The function to auto evaluate prompts is also defined here. 
-"""
-
 import lib.DataSetController as DataSetController
 import lib.LLMController as LLMController
 from linker import DATA_SET_TYPE, LLM_MODELS, CLASSIFIER_MODELS
@@ -18,7 +9,16 @@ from tqdm import tqdm
 import torch
 import numpy as np
 
-def init_results(campaign_name, llm_model, data_set_type, data_set_path, auto_mode, classifier, classifier_options):
+
+def init_results(
+    campaign_name,
+    llm_model,
+    data_set_type,
+    data_set_path,
+    auto_mode,
+    classifier,
+    classifier_options,
+):
     """Initialise la structure JSON pour stocker les résultats."""
     return {
         "name": campaign_name,
@@ -33,13 +33,16 @@ def init_results(campaign_name, llm_model, data_set_type, data_set_path, auto_mo
     }
 
 
-def create_output_file(name,classifier):
+def create_output_file(name, classifier):
     """Crée le dossier de sortie et le fichier pour les résultats."""
     output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)  # Créer le dossier s'il n'existe pas
     timestamp = datetime.now().strftime("%Y-%m-%d")
     base_file_name = f"{name.replace('/', '_')}_{timestamp}"
-    file_name = base_file_name + f"_{classifier.smoothllm_num_copies}_{classifier.smoothllm_pert_types[0]}_{classifier.smoothllm_pert_pct_min}.json"
+    file_name = (
+        base_file_name
+        + f"_{classifier.smoothllm_num_copies}_{classifier.smoothllm_pert_types[0]}_{classifier.smoothllm_pert_pct_min}.json"
+    )
 
     # Ajouter un suffixe numérique si le fichier existe déjà
     count = 1
@@ -50,7 +53,14 @@ def create_output_file(name,classifier):
     return os.path.join(output_dir, file_name)
 
 
-def record_request(output_file, results, question, response, jailbreak_successful, ground_truth:bool = False):
+def record_request(
+    output_file,
+    results,
+    question,
+    response,
+    jailbreak_successful,
+    ground_truth: bool = False,
+):
     """Enregistre les détails de chaque requête dans les résultats et sauvegarde dans le fichier JSON."""
     embeddings = jailbreak_successful[2]
     if isinstance(embeddings, np.ndarray):
@@ -62,7 +72,7 @@ def record_request(output_file, results, question, response, jailbreak_successfu
         embeddings = json.dumps(embeddings_list)
 
     embeddings = []
-    if len(jailbreak_successful) > 1 : # if threshold set
+    if len(jailbreak_successful) > 1:  # if threshold set
         request_info = {
             "question": question,
             "response": response,
@@ -71,7 +81,7 @@ def record_request(output_file, results, question, response, jailbreak_successfu
             "jailbreak_values": jailbreak_successful[1],
             "timestamp": datetime.now().isoformat(),  # Format ISO pour le timestamp
         }
-    elif ground_truth : 
+    elif ground_truth:
         request_info = {
             "question": question,
             "response": response,
@@ -80,7 +90,7 @@ def record_request(output_file, results, question, response, jailbreak_successfu
             "timestamp": datetime.now().isoformat(),  # Format ISO pour le timestamp
             "jailbreak_groundtruth": jailbreak_successful[0],
         }
-    else  : 
+    else:
         request_info = {
             "question": question,
             "response": response,
@@ -88,7 +98,7 @@ def record_request(output_file, results, question, response, jailbreak_successfu
             "embeddings": embeddings,
             "timestamp": datetime.now().isoformat(),  # Format ISO pour le timestamp
         }
-    
+
     results["requests"].append(request_info)
 
     # Sauvegarder immédiatement dans le fichier JSON
@@ -120,7 +130,10 @@ def evaluate_answer(answer: str):
 
 import json
 
-def synchronize_ground_truth(json_with_ground_truth: str, json_without_ground_truth: str):
+
+def synchronize_ground_truth(
+    json_with_ground_truth: str, json_without_ground_truth: str
+):
     """
     Synchronize the groundtruth values from one JSON file to another.
 
@@ -131,37 +144,44 @@ def synchronize_ground_truth(json_with_ground_truth: str, json_without_ground_tr
     Raises:
         ValueError: If the files are not compatible (different dataset paths or types, or missing groundtruth).
     """
-    
+
     # Load both JSON files
-    with open(json_with_ground_truth, 'r') as f:
+    with open(json_with_ground_truth, "r") as f:
         data_with_gt = json.load(f)
-    
-    with open(json_without_ground_truth, 'r') as f:
+
+    with open(json_without_ground_truth, "r") as f:
         data_without_gt = json.load(f)
-    
+
     # Check if the datasets match
     if data_with_gt["data_set_type"] != data_without_gt["data_set_type"]:
         raise ValueError("The datasets in both JSON files must be the same.")
-    
+
     # Check that the first file has the groundtruth information
     for request in data_with_gt["requests"]:
         if "jailbreak_groundtruth" not in request:
-            raise ValueError(f"Missing 'jailbreak_groundtruth' in the file: {json_with_ground_truth}")
-    
+            raise ValueError(
+                f"Missing 'jailbreak_groundtruth' in the file: {json_with_ground_truth}"
+            )
+
     # Synchronize the groundtruth values
-    for req_with_gt, req_without_gt in zip(data_with_gt["requests"], data_without_gt["requests"]):
+    for req_with_gt, req_without_gt in zip(
+        data_with_gt["requests"], data_without_gt["requests"]
+    ):
         if req_with_gt["question"] != req_without_gt["question"]:
-            raise ValueError(f"Questions do not match: '{req_with_gt['question']}' vs '{req_without_gt['question']}'")
-        
+            raise ValueError(
+                f"Questions do not match: '{req_with_gt['question']}' vs '{req_without_gt['question']}'"
+            )
+
         # Add groundtruth to the file missing it
         req_without_gt["jailbreak_groundtruth"] = req_with_gt["jailbreak_groundtruth"]
-    
-    # Save the synchronized results back to the second file
-    with open(json_without_ground_truth, 'w') as f:
-        json.dump(data_without_gt, f, indent=4)
-    
-    print(f"Synchronized groundtruth values from '{json_with_ground_truth}' to '{json_without_ground_truth}'.")
 
+    # Save the synchronized results back to the second file
+    with open(json_without_ground_truth, "w") as f:
+        json.dump(data_without_gt, f, indent=4)
+
+    print(
+        f"Synchronized groundtruth values from '{json_with_ground_truth}' to '{json_without_ground_truth}'."
+    )
 
 
 class TesterWorker(QObject):
@@ -188,7 +208,7 @@ class TesterWorker(QObject):
 
         self.campaign_name = campaign_name
 
-        if self.campaign_name == "" :
+        if self.campaign_name == "":
             raise Exception("No campaign name setted.")
 
         self.llm_model = llm_model
@@ -217,7 +237,6 @@ class TesterWorker(QObject):
                 LLM_MODELS.get(self.llm_model).get("extra"),
                 LLM_MODELS.get(self.llm_model).get("hostname"),
                 LLM_MODELS.get(self.llm_model).get("port"),
-
             )
             # Initializing the classifier
             if self.auto_mode:
@@ -226,7 +245,7 @@ class TesterWorker(QObject):
                 )(
                     CLASSIFIER_MODELS.get(self.classifier).get("API_KEY"),
                     self.classifier_options,
-                    self.llmController
+                    self.llmController,
                 )
             else:
                 self.classifier = "By hand"
@@ -239,7 +258,9 @@ class TesterWorker(QObject):
                 self.classifier,
                 self.classifier_options,
             )
-            self.output_file = create_output_file(self.campaign_name, self.classifierController)
+            self.output_file = create_output_file(
+                self.campaign_name, self.classifierController
+            )
         else:
             self.dataSet = DataSetController.GroundTruth(self.data_set_path)
             self.llmController = LLMController.GroundTruth(extra=self.data_set_path)
@@ -251,7 +272,7 @@ class TesterWorker(QObject):
 
     def startWorker(self):
         self.state_update.emit("Running...")
-        print (f"Number_prompts to test: {self.prompts_number}")
+        print(f"Number_prompts to test: {self.prompts_number}")
         try:
             with tqdm(total=self.prompts_number) as pbar:
                 while not self.stop_flag:
@@ -297,7 +318,9 @@ class TesterWorker(QObject):
                             )
                         # Adding GroudTruthValue
                         else:
-                            self.dataSet.record_ground_truth(question, self.user_decision)
+                            self.dataSet.record_ground_truth(
+                                question, self.user_decision
+                            )
                     else:
                         evaluation = self.classifierController.classify_responses(
                             prompts=[question], responses=[response]
@@ -310,11 +333,18 @@ class TesterWorker(QObject):
                         #     "Last auto evaluation '" + str(evaluation[0]) + "', running..."
                         # )
                         record_request(
-                            self.output_file, self.results, question, response, evaluation, False
+                            self.output_file,
+                            self.results,
+                            question,
+                            response,
+                            evaluation,
+                            False,
                         )
 
                     self.index += 1
-                    self.progress_update.emit(int((self.index / self.prompts_number) * 100))
+                    self.progress_update.emit(
+                        int((self.index / self.prompts_number) * 100)
+                    )
 
             # self.save_results()
             self.state_update.emit(f"Results saved to {self.output_file}")
@@ -322,9 +352,9 @@ class TesterWorker(QObject):
             return
 
         except Exception as e:
-            if not self.cli_mode :
+            if not self.cli_mode:
                 self.finished.emit(1, str(e))
-            else : 
+            else:
                 raise Exception(e)
             return
 

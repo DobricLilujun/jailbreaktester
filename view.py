@@ -1,12 +1,3 @@
-"""
-File name: view.py
-Author: Nathan Foucher 
-Contact: nathan.foucher@ext.uni.lu
-Created: 30/09/2024
-Version: 1.1
-Description: File to handle the applications GUI.
-"""
-
 from datetime import datetime
 import sys
 import webbrowser
@@ -405,8 +396,11 @@ class View(QMainWindow):
 
             options = controller.CLASSIFIER_MODELS.get(validator).get("extra")
 
-            if options != None :
-                if self.line_option_classifier.text() == "" or self.sender() == self.combo_validator:
+            if options != None:
+                if (
+                    self.line_option_classifier.text() == ""
+                    or self.sender() == self.combo_validator
+                ):
                     self.line_option_classifier.setText(options)
                     self.line_option_classifier.setEnabled(True)
                 cli_classifier_options = (

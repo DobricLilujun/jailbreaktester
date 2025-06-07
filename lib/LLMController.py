@@ -1,17 +1,9 @@
-"""
-File name: LLMController.py
-Author: Nathan Foucher 
-Contact: nathan.foucher@ext.uni.lu
-Created: 30/09/2024
-Version: 1.0
-Description: File where is defined the abstract class to communicate with the LLMs. You need to define your own implementations of the abstracts methods in this file. 
-"""
-
 from abc import ABC, abstractmethod
 import subprocess
 import litellm
 import os
 import ollama
+
 # from llama_cpp import Llama
 import json
 from openai import OpenAI
@@ -26,7 +18,7 @@ class LLMController(ABC):
     """
 
     @abstractmethod
-    def __init__(self, api_key: str = None, extra=None, hostname=None,port=None):
+    def __init__(self, api_key: str = None, extra=None, hostname=None, port=None):
         """
         Initializes the class with the API key if needed.
 
@@ -49,22 +41,19 @@ class LLMController(ABC):
         """
         pass
 
+
 class vLLM(LLMController):
-    def __init__(self, api_key: str = "EMPTY", extra=None, hostname=None,port=None):
+    def __init__(self, api_key: str = "EMPTY", extra=None, hostname=None, port=None):
         """
         Utilise un modèle vllm
         Args:
             model_name (str): Le nom du modèle avec vLLM
         """
         self.model = str(extra)
-        print("http://"+str(hostname)+":"+str(port)+"/v1")
+        print("http://" + str(hostname) + ":" + str(port) + "/v1")
         self.client = OpenAI(
-            api_key=api_key,
-            base_url="http://"+hostname+":"+port+"/v1"
+            api_key=api_key, base_url="http://" + hostname + ":" + port + "/v1"
         )
-        
-
-    
 
     def askPrompt(self, prompt: str) -> str:
         """
@@ -78,17 +67,14 @@ class vLLM(LLMController):
         """
         completion = self.client.chat.completions.create(
             model=self.model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": str(prompt)
-                }
-            ], max_tokens=MAX_TOKEN
+            messages=[{"role": "user", "content": str(prompt)}],
+            max_tokens=MAX_TOKEN,
         )
         return str(completion.choices[0].message.content)
 
+
 class OpenAi(LLMController):
-    def __init__(self, api_key=None, extra=None,hostname=None,port=None):
+    def __init__(self, api_key=None, extra=None, hostname=None, port=None):
         """
         Initialise le modèle Llama 2 en utilisant le wrapper litellm.
 
@@ -96,14 +82,16 @@ class OpenAi(LLMController):
             model_name (str): Le model a utiliser
             api_key (str): Le jeton d'API pour OPEN AI
         """
-        if api_key :
+        if api_key:
             os.environ["OPENAI_API_KEY"] = api_key
             self.model = extra
-            
-        else : 
-            raise Exception("OPEN AI API key is missing. Please provide one in the .env file.")
 
-        #If a sepcifc server is specified, we use it (for vLLM use). Otherwise defaut OpenAI access
+        else:
+            raise Exception(
+                "OPEN AI API key is missing. Please provide one in the .env file."
+            )
+
+        # If a sepcifc server is specified, we use it (for vLLM use). Otherwise defaut OpenAI access
         if hostname:
             if port == "8002":
                 self.model_name = "gemma"
@@ -112,14 +100,15 @@ class OpenAi(LLMController):
             else:
                 self.model_name = ""
             self.client = OpenAI(
-                #api_key=api_key,
-                    base_url="http://"+hostname+":"+port+"/v1"
-                )
+                # api_key=api_key,
+                base_url="http://"
+                + hostname
+                + ":"
+                + port
+                + "/v1"
+            )
         else:
             self.client = OpenAI()
-      
-
-
 
     def askPrompt(self, prompt: str) -> str:
         """
@@ -133,14 +122,11 @@ class OpenAi(LLMController):
         """
         completion = self.client.chat.completions.create(
             model=self.model,
-            messages=[
-                {
-                    "role": "user",
-                    "content": str(prompt)
-                }
-            ], max_tokens=MAX_TOKEN
+            messages=[{"role": "user", "content": str(prompt)}],
+            max_tokens=MAX_TOKEN,
         )
         return str(completion.choices[0].message.content)
+
 
 class GroundTruth(LLMController):
     """
@@ -170,10 +156,8 @@ class GroundTruth(LLMController):
             file_path (str): Path to the JSON file.
         """
 
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             self.data = json.load(f)
-
-            
 
     def askPrompt(self, prompt: str) -> str:
         """
@@ -192,8 +176,6 @@ class GroundTruth(LLMController):
         return "*Prompt not found in dataset.*"
 
 
-
-
 class HF(LLMController):
     def __init__(self, api_key=None, extra=None):
         """
@@ -204,12 +186,12 @@ class HF(LLMController):
             api_key (str): Le jeton d'API pour Hugging Face.
         """
         if api_key is None:
-            raise ValueError("Hugging API key is missing. Please provide one in the .env file.")
+            raise ValueError(
+                "Hugging API key is missing. Please provide one in the .env file."
+            )
         os.environ["HUGGINGFACE_API_KEY"] = api_key
         self.model_name = "huggingface/" + str(extra)
         subprocess.run(["huggingface-cli", "login", "--token", api_key])
-
-        
 
     def askPrompt(self, prompt: str) -> str:
         """
@@ -222,7 +204,9 @@ class HF(LLMController):
             str: La réponse générée par le modèle.
         """
         messages = [{"content": str(prompt), "role": "user"}]
-        response = litellm.completion(model=self.model_name, messages=messages, max_tokens=MAX_TOKEN)
+        response = litellm.completion(
+            model=self.model_name, messages=messages, max_tokens=MAX_TOKEN
+        )
 
         # Retourner la réponse générée
         return str(response["choices"][0].message.content)
@@ -310,4 +294,3 @@ class Ollama(LLMController):
 
 
 #         return str(output["choices"][0]["text"].split("<|end_header_id|>", 1)[1])
-    

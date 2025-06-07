@@ -1,12 +1,3 @@
-"""
-File name: linker.py
-Author: Nathan Foucher 
-Contact: nathan.foucher@ext.uni.lu
-Created: 30/09/2024
-Version: 1.1
-Description: Module to generate web application showing campaigns results.
-"""
-
 import datetime
 import dateutil
 import os
@@ -105,7 +96,9 @@ def graph_plot(campaigns):
     plot_metric(precision_values, "Precision", "precision_plot.png")
     plot_metric(recall_values, "Recall", "recall_plot.png")
     plot_metric(f1_values, "F1-Score", "f1_plot.png")
-    plot_metric(average_time_values, "Average request time (s)", "average_time_plot.png")
+    plot_metric(
+        average_time_values, "Average request time (s)", "average_time_plot.png"
+    )
 
 
 # Route principale pour afficher les tests
@@ -159,13 +152,17 @@ def calculate_metrics(campaign):
         if request.get("jailbreak_successful", False):
             successful_jailbreaks_classifier += 1
 
-    asr_classifier = (successful_jailbreaks_classifier / total_request) * 100 if total_request > 0 else 0
+    asr_classifier = (
+        (successful_jailbreaks_classifier / total_request) * 100
+        if total_request > 0
+        else 0
+    )
 
     # try:
     true_labels = []
     predicted_labels = []
     timestamps = []
-    successful_jailbreaks_ground_truth = 0 
+    successful_jailbreaks_ground_truth = 0
     VP = FP = FN = VN = 0
     # Extraire les vraies étiquettes (si jailbreak réussi ou non) et les étiquettes prédites (étiquettes actuelles)
     for request in campaign["requests"]:
@@ -174,7 +171,7 @@ def calculate_metrics(campaign):
         # )  # Remplace par la vraie valeur attendue
         # predicted_labels.append(1 if request["jailbreak_successful"] else 0)
 
-        try :
+        try:
             predicted_success = request.get(
                 "jailbreak_successful", False
             )  # Prédiction du modèle
@@ -182,8 +179,7 @@ def calculate_metrics(campaign):
                 "jailbreak_groundtruth", False
             )  # Réalité (il faudrait ajouter ces données si elles ne sont pas présentes)
 
-
-            if actual_success :
+            if actual_success:
                 successful_jailbreaks_ground_truth += 1
 
             if predicted_success and actual_success:
@@ -194,16 +190,20 @@ def calculate_metrics(campaign):
                 FN += 1  # Faux Négatif
             else:
                 VN += 1  # Vrai Négatif
-        except :
-            VP, FP, FN, VN, successful_jailbreaks_ground_truth   = 0, 0, 0, 0, 0
+        except:
+            VP, FP, FN, VN, successful_jailbreaks_ground_truth = 0, 0, 0, 0, 0
 
         timestamps.append(dateutil.parser.parse(request.get("timestamp")))
         # Calcul des différences entre chaque timestamp consécutif
         time_deltas = [
-            (timestamps[i+1] - timestamps[i]).total_seconds()
+            (timestamps[i + 1] - timestamps[i]).total_seconds()
             for i in range(len(timestamps) - 1)
         ]
-        asr_groudTruth = (successful_jailbreaks_ground_truth / total_request) * 100 if total_request > 0 else 0
+        asr_groudTruth = (
+            (successful_jailbreaks_ground_truth / total_request) * 100
+            if total_request > 0
+            else 0
+        )
 
         # Calcul de la moyenne des temps de requête
     average_time = sum(time_deltas) / len(time_deltas) if time_deltas else 0
@@ -292,7 +292,7 @@ def update_graph():
     if not selected_campaigns:
         print("Aucun test sélectionné pour le graphique.")  # Debug
         return
-    
+
     selected_campaigns = sorted(selected_campaigns, key=lambda x: x["name"])
 
     # Générer le graphique ASR avec les campagnes sélectionnés

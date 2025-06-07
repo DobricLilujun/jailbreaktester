@@ -17,15 +17,17 @@ from linker import DATA_SET_TYPE, LLM_MODELS, CLASSIFIER_MODELS
 
 def create_llm_controller(llm_model: str):
     llmController = LLM_MODELS.get(llm_model).get("class")(
-                LLM_MODELS.get(llm_model).get("API_key"),
-                LLM_MODELS.get(llm_model).get("extra"),
-                LLM_MODELS.get(llm_model).get("hostname"),
-                LLM_MODELS.get(llm_model).get("port"),
-            )
+        LLM_MODELS.get(llm_model).get("API_key"),
+        LLM_MODELS.get(llm_model).get("extra"),
+        LLM_MODELS.get(llm_model).get("hostname"),
+        LLM_MODELS.get(llm_model).get("port"),
+    )
     return llmController
 
 
-def create_classifier_controller(cls_name: str, llm_controller, threshold_success_prob=0.15):
+def create_classifier_controller(
+    cls_name: str, llm_controller, threshold_success_prob=0.15
+):
     clssifier_options = (
         f"--threshold {threshold_success_prob} "
         f"--smoothllm_num_copies 3 "
@@ -36,17 +38,18 @@ def create_classifier_controller(cls_name: str, llm_controller, threshold_succes
 
     classifier_config = CLASSIFIER_MODELS.get(cls_name)
     return classifier_config["class"](
-        classifier_config.get("API_KEY"),
-        clssifier_options,
-        llm_controller
+        classifier_config.get("API_KEY"), clssifier_options, llm_controller
     )
 
 
-def evaluate_prompt_SmoothLLM(question: str, llm_controller, classifier_controller) -> dict:
+def evaluate_prompt_SmoothLLM(
+    question: str, llm_controller, classifier_controller
+) -> dict:
     response = llm_controller.askPrompt(question)
-    judge_results, perturbed_prompts, perturbed_prompt_outputs = classifier_controller.classify_responses(
-        prompts=[question],
-        responses=[response]
+    judge_results, perturbed_prompts, perturbed_prompt_outputs = (
+        classifier_controller.classify_responses(
+            prompts=[question], responses=[response]
+        )
     )
     return {
         "cls_label": judge_results[0][0],
@@ -55,7 +58,7 @@ def evaluate_prompt_SmoothLLM(question: str, llm_controller, classifier_controll
         "cls_perturbed_prompts": perturbed_prompts,
         "cls_perturbed_prompt_outputs": perturbed_prompt_outputs,
         "cls_original_prompt": question,
-        "cls_original_response": response
+        "cls_original_response": response,
     }
 
 
@@ -77,7 +80,9 @@ def evaluate_df_SmoothLLM(input_file_path: str, llm_model: str, cls_name: str):
     for i, row in tqdm(df.iterrows(), total=df.shape[0], desc="Processing Rows"):
         row_copy = row.copy()
         question = row_copy["prompt"]
-        result = evaluate_prompt_SmoothLLM(question, llm_controller, classifier_controller)
+        result = evaluate_prompt_SmoothLLM(
+            question, llm_controller, classifier_controller
+        )
         for key, value in result.items():
             row_copy[key] = value
 
@@ -93,15 +98,31 @@ def evaluate_df_SmoothLLM(input_file_path: str, llm_model: str, cls_name: str):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Evaluate prompts with SmoothLLM classifier.")
-    parser.add_argument("--input_file_path", type=str, required=True, help="Path to the input JSONL file.")
-    parser.add_argument("--llm_model", type=str, required=True, help="LLM model name (must match linker.LLM_MODELS).")
-    parser.add_argument("--cls_name", type=str, default="smoothllm", help="Classifier name (must match linker.CLASSIFIER_MODELS).")
+    parser = argparse.ArgumentParser(
+        description="Evaluate prompts with SmoothLLM classifier."
+    )
+    parser.add_argument(
+        "--input_file_path",
+        type=str,
+        required=True,
+        help="Path to the input JSONL file.",
+    )
+    parser.add_argument(
+        "--llm_model",
+        type=str,
+        required=True,
+        help="LLM model name (must match linker.LLM_MODELS).",
+    )
+    parser.add_argument(
+        "--cls_name",
+        type=str,
+        default="smoothllm",
+        help="Classifier name (must match linker.CLASSIFIER_MODELS).",
+    )
 
     args = parser.parse_args()
 
     evaluate_df_SmoothLLM(args.input_file_path, args.llm_model, args.cls_name)
-
 
 
 # python smoothLLMClassifier.py \
